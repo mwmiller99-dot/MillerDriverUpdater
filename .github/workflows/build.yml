@@ -1,0 +1,41 @@
+# Builds and tests every push and pull request on a clean Windows server, and keeps the exe + Setup for 14 days
+# (Actions tab -> the run -> Artifacts).
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build and test (csc.exe from .NET Framework 4.8, C# 5)
+        shell: cmd
+        run: call build.cmd
+
+      - name: Install NSIS
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { choco install nsis -y --no-progress }
+
+      - name: Build the installer
+        shell: cmd
+        working-directory: installer
+        run: |
+          "%ProgramFiles(x86)%\NSIS\makensis.exe" /V2 mdu.nsi
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: MillerDriverUpdater-${{ github.sha }}
+          path: |
+            dist/MillerDriverUpdater.exe
+            dist/MillerDriverUpdater-*-Setup.exe
+          retention-days: 14

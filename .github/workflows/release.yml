@@ -1,0 +1,83 @@
+# Publishes a release when a version tag (v2.3.1) is pushed - release.cmd does that. Built and tested on a clean
+# Windows server, so the published files demonstrably come from this repository's source; GitHub records a build
+# provenance attestation for them (check one with:  gh attestation verify <file> --repo mwmiller99-dot/MillerDriverUpdater).
+# Run it by hand (Actions -> Release -> Run workflow) for a dry run: everything except attesting and publishing.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write       # create the release
+      id-token: write       # sign the build provenance attestation
+      attestations: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read the version (the tag must match AppInfo.Version)
+        id: ver
+        shell: pwsh
+        run: |
+          $v = (Select-String -Path app\Core.cs -Pattern 'const string Version = "([^"]+)"').Matches[0].Groups[1].Value
+          if (-not $v) { throw 'No AppInfo.Version in app\Core.cs' }
+          "version=$v" >> $env:GITHUB_OUTPUT
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$v") { throw "Tag $env:GITHUB_REF_NAME does not match AppInfo.Version $v" }
+          "Version $v"
+
+      - name: Build and test
+        shell: cmd
+        run: call build.cmd
+
+      - name: Install NSIS
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { choco install nsis -y --no-progress }
+
+      - name: Build the installer
+        shell: cmd
+        working-directory: installer
+        run: |
+          "%ProgramFiles(x86)%\NSIS\makensis.exe" /V2 /DAPPVER=${{ steps.ver.outputs.version }} mdu.nsi
+
+      - name: Checksums
+        shell: pwsh
+        run: |
+          $files = "dist\MillerDriverUpdater-${{ steps.ver.outputs.version }}-Setup.exe", "dist\MillerDriverUpdater.exe"
+          $files | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_ -Algorithm SHA256).Hash.ToLower(), (Split-Path $_ -Leaf) } | Set-Content dist\SHA256SUMS.txt -Encoding ascii
+          Get-Content dist\SHA256SUMS.txt
+
+      - name: Attest build provenance
+        if: github.ref_type == 'tag'
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            dist/MillerDriverUpdater-${{ steps.ver.outputs.version }}-Setup.exe
+            dist/MillerDriverUpdater.exe
+
+      - name: Publish the release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME "dist\MillerDriverUpdater-${{ steps.ver.outputs.version }}-Setup.exe" dist\SHA256SUMS.txt `
+            --repo $env:GITHUB_REPOSITORY --title "Miller Driver Updater ${{ steps.ver.outputs.version }}" --notes-file release-notes.md --verify-tag
+
+      - name: Keep the files (dry run)
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-dry-run-${{ steps.ver.outputs.version }}
+          path: |
+            dist/MillerDriverUpdater-*-Setup.exe
+            dist/MillerDriverUpdater.exe
+            dist/SHA256SUMS.txt
+          retention-days: 7

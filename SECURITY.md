@@ -25,6 +25,8 @@ answer as soon as possible; fixes ship as a new release, and the report is credi
 
 ## How releases can be checked
 
-Each release lists `SHA256SUMS.txt`, and GitHub shows a SHA-256 digest for every file. The app itself refuses an
-update whose checksum does not match GitHub's. Releases are not code-signed yet, so Windows SmartScreen and some
+Releases are built by GitHub Actions from this repository's source, with a build provenance attestation:
+`gh attestation verify MillerDriverUpdater-<version>-Setup.exe --repo mwmiller99-dot/MillerDriverUpdater` proves a file
+came from that build. Each release also lists `SHA256SUMS.txt`, and GitHub shows a SHA-256 digest for every file; the
+app itself refuses an update whose checksum does not match GitHub's. Releases are not code-signed yet, so Windows SmartScreen and some
 antivirus heuristics warn about them.

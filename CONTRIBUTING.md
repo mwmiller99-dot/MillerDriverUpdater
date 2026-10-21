@@ -17,7 +17,8 @@ Thanks for helping. A few rules keep this app trustworthy and simple.
 Run `build.cmd` on any Windows 10/11 PC. It compiles `dist\MillerDriverUpdater.exe` with the C# compiler that ships
 inside Windows (.NET Framework 4.8) and runs the tests - no Visual Studio, no SDK. That compiler speaks **C# 5**, so no
 string interpolation, `?.`, `nameof`, expression-bodied members or tuples. The installer needs NSIS 3
-(`installer\mdu.nsi`). See `CLAUDE.md` for how the parts fit together.
+(`installer\mdu.nsi`). See `CLAUDE.md` for how the parts fit together. GitHub Actions builds and tests every push and pull
+request the same way (`.github/workflows/build.yml`); releases are built there too, from a version tag.
 
 ## Pull requests
 - Keep `build.cmd` passing; add a test in `tests\Tests.cs` for every parsing fix (with sample data, not real output

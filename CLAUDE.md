@@ -148,17 +148,20 @@ address, never a personal email; never commit reports, logs, screenshots or anyt
   `History` (`reports\history.json`, newest 500) gets every install, rollback, hide and unhide; collapsed card.
   Design came from a survey of UniGetUI, Winget-AutoUpdate, wumgr, TinyNvidiaUpdateChecker, DriverStoreExplorer,
   topgrade (2026-10-21).
+- **CI / releases**: `.github/workflows/build.yml` builds + tests every push on windows-latest (csc v4 is there; NSIS via
+  choco) and keeps the exe + Setup as artifacts. `release.yml` runs on `v*` tags: checks the tag equals AppInfo.Version,
+  builds, tests, makes Setup + SHA256SUMS, `actions/attest-build-provenance`, then `gh release create` with
+  release-notes.md; run by hand it is a dry run (artifacts only). `release.cmd` = local build check + tag + push;
+  `release.cmd local` = the old publish-from-this-PC path. Pushing workflow files needs the gh token's `workflow` scope.
 
 ## Ideas not built (in priority order)
 1. Code signing: SignPath Foundation signs open-source projects free from a GitHub Actions build (TinyNvidiaUpdateChecker
    and DriverStoreExplorer use it); needs an OSI license and a CI build first. Then set `Updater.ExpectedSigner`.
-2. CI: build + tests on every push (windows runner has csc v4 and NSIS via choco), release from a tag with build
-   provenance attestation. Pushing `.github/workflows` needs the gh token's `workflow` scope.
-3. Opt-in unattended app updates from the weekly check (apps only, never drivers), like Winget-AutoUpdate.
-4. Publish to winget (winget-pkgs manifest), ideally automated per release.
-5. Windows OS updates too (same WUA search without `Type='Driver'`) behind a toggle.
-6. Name unknown USB vendors with the public `usb.ids` list.
-7. Driver uninstall (`pnputil /delete-driver oemNN.inf /uninstall`) from the All devices card, with confirmation.
+2. Opt-in unattended app updates from the weekly check (apps only, never drivers), like Winget-AutoUpdate.
+3. Publish to winget (winget-pkgs manifest), ideally automated per release.
+4. Windows OS updates too (same WUA search without `Type='Driver'`) behind a toggle.
+5. Name unknown USB vendors with the public `usb.ids` list.
+6. Driver uninstall (`pnputil /delete-driver oemNN.inf /uninstall`) from the All devices card, with confirmation.
 
 ## Out of scope (say so in the UI, don't fake it)
 - Bluetooth consumer headphones/earbuds — firmware updates go through the phone app.

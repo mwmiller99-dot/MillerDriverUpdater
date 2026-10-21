@@ -81,10 +81,12 @@ in its notification too. Update:
 Nothing updates without that click, and never during an install. The repository is set in `Updater.Repo`
 (app/Updater.cs); while it is empty, no check is made.
 
-Publishing a version: bump it (Core.cs, app.manifest, installer/mdu.nsi), write `release-notes.md`, run `release.cmd`.
-It builds, tests, makes the Setup and `SHA256SUMS.txt`, and creates the GitHub release with the GitHub CLI
-(`winget install --id GitHub.cli --exact`, then `gh auth login` once). Without the CLI it prints the two-minute manual
-steps for github.com.
+Publishing a version: bump it (Core.cs, app.manifest, installer/mdu.nsi), write `release-notes.md` and `CHANGELOG.md`,
+commit, and run `release.cmd`. It checks the build here, then tags the version and pushes the tag; GitHub Actions
+(`.github/workflows/release.yml`) builds and tests it on a clean Windows server, records a **build provenance
+attestation** (GitHub's signed record that the files were built from this repository), and publishes the release.
+Anyone can check a downloaded file with `gh attestation verify <file> --repo mwmiller99-dot/MillerDriverUpdater`.
+`release.cmd local` builds and publishes from the PC instead. Every push is also built and tested (`build.yml`).
 
 ## What Install does, in order
 
@@ -144,7 +146,8 @@ app/Preflight.cs        "Before you start" checks + plain-language errors
 app/Report.cs           HTML/JSON report, support bundle, weekly task, notification
 app/Choices.cs          skipped NVIDIA versions, History (reports\skipped.json, history.json)
 app/Updater.cs          self-update: GitHub Releases check, download, SHA-256/signature check, Setup /UPDATE handoff
-release.cmd             build + Setup + checksums + GitHub release; release-notes.md is its text
+release.cmd             tag a version so GitHub Actions builds, attests and publishes it (release.cmd local: from this PC)
+.github/workflows       build.yml (every push: build + tests), release.yml (version tags: build, attest, publish)
 app/Native.cs           ConPTY, process trees, WinVerifyTrust, SetupAPI, window helpers, WUA callbacks
 app/Core.cs             app identity, data folder, logging, formatting, process helper
 app/app.manifest        asInvoker, Windows 10/11, per-monitor DPI

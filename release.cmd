@@ -20,7 +20,8 @@ if "%REPO%"=="" (
 )
 echo Releasing Miller Driver Updater %VER% to github.com/%REPO%
 
-call build.cmd || exit /b 1
+rem By full path: cmd may be set not to look in the current folder for commands (NoDefaultCurrentDirectoryInExePath).
+call "%~dp0build.cmd" || exit /b 1
 set "MAKENSIS=%ProgramFiles(x86)%\NSIS\makensis.exe"
 if not exist "%MAKENSIS%" set "MAKENSIS=makensis.exe"
 pushd installer

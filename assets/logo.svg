@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="mdu-blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0A84FF"/>
+      <stop offset="1" stop-color="#1A6CF0"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="254" height="254" rx="56" fill="#FFFFFF" stroke="#DADEE6" stroke-width="2"/>
+  <text x="128" y="172" text-anchor="middle" font-family="Inter Display, Inter, Segoe UI, Arial, sans-serif" font-weight="900" font-size="118" letter-spacing="-6" fill="url(#mdu-blue)">MDU</text>
+</svg>

@@ -169,3 +169,7 @@ Send the Setup.exe (or just the exe). Two things to know:
   Signing removes both; Azure Trusted Signing is the cheapest route for an individual (about $10/month).
 - When a friend says "it doesn't work", ask for the zip from **Report a Problem**: `mdu.log`, `gui-error.log`, the
   last report, and a `system.txt` with Windows/winget versions, pre-flight findings and the last scan's timings.
+
+## License
+
+MIT - see [LICENSE](LICENSE).

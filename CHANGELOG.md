@@ -7,7 +7,7 @@
   an NVIDIA version is skipped until a newer one comes out. A **Hidden updates** card lists them with **Unhide**.
 - **History.** A collapsed card lists what the app installed, rolled back or hid on this PC, newest first.
 - **What's new** link on the NVIDIA driver row (nvidia.com's release notes for that driver).
-- Repository: security policy, changelog, contributing guide, issue forms.
+- Repository: MIT license, security policy, changelog, contributing guide, issue forms.
 
 ## 2.2.1
 - Setup no longer looks stuck when an antivirus removes the app: it pauses on a Retry/Cancel message (allow the

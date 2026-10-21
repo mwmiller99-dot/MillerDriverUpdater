@@ -19,7 +19,7 @@ tool only uses sources you can trust:
 
 Either:
 
-- **Setup:** double-click `MillerDriverUpdater-2.2.1-Setup.exe`, then Next, Next, Install. It installs for your user
+- **Setup:** double-click `MillerDriverUpdater-2.3.0-Setup.exe`, then Next, Next, Install. It installs for your user
   account only (`%LOCALAPPDATA%\Programs\Miller Driver Updater`), puts **Miller Driver Updater** in the Start menu, offers
   a desktop shortcut, and can switch on the Monday check. Uninstall from Settings > Apps.
 - **Portable:** just run `MillerDriverUpdater.exe` from anywhere. It is the whole app (about 300 KB).
@@ -52,6 +52,12 @@ minutes on a slow one). The headline shows the percentage, paced by how long eac
   Composite Device") with an **Open App** button for its vendor app, or **Get App** (installs it through winget, or
   opens the vendor's page) when the app is missing.
 - **Roll Back** appears on every driver this app replaced; earlier backups are listed in their own card.
+- **Hide** (a small link on each update) keeps an update away for good, where the source itself remembers it: a driver
+  is hidden in Windows Update (so Windows will not install it on its own either - use it after a Roll Back), an app is
+  pinned in winget, and an NVIDIA version is skipped until a newer one comes out (**Skip this version**). **Hidden
+  updates** lists them with **Unhide**.
+- **History** lists what the app installed, rolled back or hid on this PC, newest first.
+- **What's new** on the NVIDIA row opens nvidia.com's release notes for that driver.
 - **Check weekly and notify me** (bottom) registers a silent Monday-morning check that shows a notification only when
   something is found; clicking the notification opens the app.
 - **Report a Problem** (bottom right) zips the app's logs and the latest report onto the desktop for sending.
@@ -119,7 +125,7 @@ every Windows 10 1903+ and Windows 11 PC), then runs the tests. No Visual Studio
 C# 5 because that is what that compiler speaks. `build.cmd notest` skips the tests.
 
 The Setup.exe needs NSIS 3 (`winget install --id NSIS.NSIS --exact`). After `build.cmd`:
-`cd installer` then `"%ProgramFiles(x86)%\NSIS\makensis.exe" mdu.nsi` → `dist\MillerDriverUpdater-2.2.1-Setup.exe`
+`cd installer` then `"%ProgramFiles(x86)%\NSIS\makensis.exe" mdu.nsi` → `dist\MillerDriverUpdater-2.3.0-Setup.exe`
 (it packs `dist\MillerDriverUpdater.exe`).
 
 ## Layout
@@ -136,12 +142,14 @@ app/Nvidia.cs           nvidia.com lookup, download, signature check, driver-onl
 app/Drivers.cs          restore point, pnputil backup/rollback
 app/Preflight.cs        "Before you start" checks + plain-language errors
 app/Report.cs           HTML/JSON report, support bundle, weekly task, notification
+app/Choices.cs          skipped NVIDIA versions, History (reports\skipped.json, history.json)
 app/Updater.cs          self-update: GitHub Releases check, download, SHA-256/signature check, Setup /UPDATE handoff
 release.cmd             build + Setup + checksums + GitHub release; release-notes.md is its text
 app/Native.cs           ConPTY, process trees, WinVerifyTrust, SetupAPI, window helpers, WUA callbacks
 app/Core.cs             app identity, data folder, logging, formatting, process helper
 app/app.manifest        asInvoker, Windows 10/11, per-monitor DPI
 tests/Tests.cs          tests for the pure logic (run by build.cmd)
+SECURITY.md, CHANGELOG.md, CONTRIBUTING.md, .github/ISSUE_TEMPLATE   security policy, changes, rules, issue forms
 installer/mdu.nsi       NSIS script for MillerDriverUpdater-<version>-Setup.exe
 assets/                 MDU icon (.ico is compiled into the exe)
 ```

@@ -78,6 +78,17 @@ static class Tests
         Eq("4.3.0.2001.g0123456789ab", piped[2].Available, "piped table: long version not cut");
         Eq("self,normal,normal", piped[0].Kind + "," + piped[1].Kind + "," + piped[2].Kind, "piped table: kinds");
 
+        // --- winget pin list (hidden apps), in the layout winget 1.29 prints
+        List<WingetUpgrade> pins = Winget.ParsePinTable(new[] {
+            "Name              Id        Version Source Pin type",
+            "---------------------------------------------------",
+            "7-Zip 26.04 (x64) 7zip.7zip 26.04   winget Pinning" });
+        Eq(1, pins.Count, "pins: one row");
+        Eq("7-Zip 26.04 (x64)", pins[0].Name, "pins: name");
+        Eq("7zip.7zip", pins[0].Id, "pins: id");
+        Eq("26.04", pins[0].Installed, "pins: version");
+        Eq(0, Winget.ParsePinTable(new[] { "There are no pins configured." }).Count, "pins: none configured");
+
         // --- USB / Bluetooth ids (through the inventory's own builder)
         string hw = "HID\\VID_046D&PID_C539&REV_0100&MI_01&Col01";
         Eq("046D", Rx.Group(hw, "VID_([0-9A-F]{4})", 1).ToUpperInvariant(), "USB VID parsed");

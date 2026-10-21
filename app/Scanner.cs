@@ -163,6 +163,7 @@ namespace Mdu
                         r.DeviceCount = r.Inventory.Count;
                         r.Problems = Inventory.ProblemDevices(r.Inventory);
                         r.Backups = Drivers.ListBackups(AppInfo.AllBackupDirs);
+                        r.History = History.Load();
                         return 0;
                     });
                     Phase(prog, "graphics", () =>
@@ -174,13 +175,25 @@ namespace Mdu
                     Gpu nvGpu = r.Gpus.Find(g => g.Vendor == "NVIDIA");
                     if (nvGpu != null) r.Nvidia = Phase(prog, "nvidia", () => Nvidia.Lookup(nvGpu.Name, nvGpu.FriendlyVersion));
                     else { prog.Begin("nvidia"); prog.End("nvidia"); }
+                    // A version the person chose to skip is not offered; a newer one is.
+                    if (r.Nvidia != null && r.Nvidia.Available && r.Nvidia.Version == Skips.Get("nvidia"))
+                    {
+                        r.Nvidia.Available = false;
+                        r.Nvidia.Skipped = true;
+                        r.SkippedNvidia = r.Nvidia.Version;
+                    }
                 });
 
                 Task wingetTask = Task.Run(() =>
                 {
                     r.Apps = Phase(prog, "winget", () =>
                     {
-                        try { return Winget.Upgrades(); }
+                        try
+                        {
+                            List<WingetUpgrade> ups = Winget.Upgrades();
+                            try { r.PinnedApps = Winget.Pins(); } catch (Exception ex) { Log.Diag("winget pin list failed: " + ex.Message); }
+                            return ups;
+                        }
                         catch (Exception ex) { r.WingetError = Errors.Text(ex); Log.Diag("winget listing failed: " + r.WingetError); return new List<WingetUpgrade>(); }
                     });
                     try { mainTask.Wait(); } catch { return; }
@@ -212,6 +225,7 @@ namespace Mdu
                 if (r.Nvidia != null && !string.IsNullOrEmpty(r.Nvidia.Version) && !owners.Contains("NVIDIA")) owners.Add("NVIDIA");
                 foreach (WuDriver d in wu)
                 {
+                    if (d.Hidden) { r.HiddenDrivers.Add(d); continue; }   // hidden by the person, in Windows Update itself
                     bool deferred = false;
                     if (Rx.IsMatch(d.Class, "Display")) foreach (string o in owners) if (Rx.IsMatch((d.Manufacturer ?? "") + " " + d.Title, o)) deferred = true;
                     if (deferred) r.DeferredGpu.Add(d.Title); else r.Drivers.Add(d);

@@ -39,7 +39,8 @@ namespace Mdu
         public static List<WuDriver> SearchDrivers()
         {
             dynamic searcher = Session().CreateUpdateSearcher();
-            dynamic result = searcher.Search("IsInstalled=0 and Type='Driver' and IsHidden=0");
+            // Hidden ones too (flagged), so the window can list them under Hidden updates with Unhide.
+            dynamic result = searcher.Search("IsInstalled=0 and Type='Driver'");
             List<WuDriver> list = new List<WuDriver>();
             dynamic updates = result.Updates;
             int count = updates.Count;
@@ -55,11 +56,24 @@ namespace Mdu
                 try { d.HardwareId = Util.Str(u.DriverHardwareID); } catch { }
                 try { object date = u.DriverVerDate; if (date is DateTime) d.VersionDate = ((DateTime)date).ToString("yyyy-MM-dd", Util.Inv); } catch { }
                 try { d.Optional = (bool)u.BrowseOnly; } catch { }
+                try { d.Hidden = (bool)u.IsHidden; } catch { }
                 try { d.SizeMB = Math.Round(Num((object)u.MaxDownloadSize) / (1024.0 * 1024), 1); } catch { }
                 d.Update = u;
                 list.Add(d);
             }
             return list;
+        }
+
+        // Hides a driver update in Windows Update itself (or shows it again), so Windows does not install it on its own
+        // either - the way to keep a driver away after Roll Back. Needs administrator rights. Call from a thread-pool (MTA)
+        // thread: the update object belongs to the scan's MTA session.
+        public static void SetHidden(WuDriver d, bool hidden)
+        {
+            if (!Util.IsAdmin()) throw new UnauthorizedAccessException("Hiding a Windows Update driver requires administrator rights.");
+            dynamic u = d.Update;
+            u.IsHidden = hidden;
+            d.Hidden = hidden;
+            Log.Diag((hidden ? "Hid" : "Unhid") + " Windows Update driver: " + d.Title);
         }
 
         static double Num(object o)

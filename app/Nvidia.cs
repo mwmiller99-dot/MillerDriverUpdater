@@ -90,6 +90,8 @@ namespace Mdu
                 string name = Util.Str(Get(d, "Name"));
                 if (name.Length > 0) info.Name = Uri.UnescapeDataString(name);
                 info.ReleaseDate = Util.Str(Get(d, "ReleaseDateTime"));
+                string details = Util.Str(Get(d, "DetailsURL"));   // nvidia.com's release-notes page for this driver
+                if (Rx.IsMatch(details, @"^https://[a-z0-9.-]*nvidia\.com/")) info.DetailsUrl = details;
                 string dl = Util.Str(Get(d, "DownloadURL"));
                 if (dl.Length > 0 && !Rx.IsMatch(dl, "^https?://")) dl = "https:" + dl;
                 if (dl.Length == 0)

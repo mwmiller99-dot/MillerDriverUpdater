@@ -1,0 +1,53 @@
+name: Something went wrong
+description: An update failed, the app showed an error, or something looks wrong.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please **don't attach the "Report a Problem" zip here**: issues are public, and that zip
+        contains your PC's device names, driver versions and installed apps. Describe the problem below instead; if the
+        logs are needed, we will ask for the few lines that matter.
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Bottom-right corner of the window (for example v2.3.0).
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: Start > type "winver" > Enter (for example Windows 11 24H2).
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: What was it about?
+      options:
+        - A driver from Windows Update
+        - The NVIDIA driver
+        - An app update (winget)
+        - Installing or updating Miller Driver Updater itself
+        - Antivirus removed the app
+        - The scan / the window
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you clicked, what you expected, and what the app said (the text under the row helps most).
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log lines (optional)
+      description: |
+        From %LOCALAPPDATA%\Miller Driver Updater\reports\mdu.log, only the lines around the problem.
+        Remove anything you don't want public (PC name, user name).
+      render: text

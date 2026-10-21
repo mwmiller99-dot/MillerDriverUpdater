@@ -141,13 +141,24 @@ address, never a personal email; never commit reports, logs, screenshots or anyt
   Unsigned releases will be quarantined by Malwarebytes-style ML on every update; signing first is the real fix.
 - Design intent: Apple Software Update, not a dashboard. Resist tabs, sidebars, settings pages or logs in the window.
 
+- **Hide / history (2.3)**: Hide on a row → the source keeps the choice: WUA `IUpdate.IsHidden = true`
+  (`WindowsUpdate.SetHidden`, admin, MTA thread; the search no longer filters `IsHidden=0`, hidden ones go to
+  `ScanResult.HiddenDrivers`), `winget pin add` (pinned apps drop out of `winget upgrade`, verified; `Winget.Pins`
+  parses `winget pin list`), NVIDIA version → `reports\skipped.json` (`Skips`). "Hidden updates" card with Unhide.
+  `History` (`reports\history.json`, newest 500) gets every install, rollback, hide and unhide; collapsed card.
+  Design came from a survey of UniGetUI, Winget-AutoUpdate, wumgr, TinyNvidiaUpdateChecker, DriverStoreExplorer,
+  topgrade (2026-10-21).
+
 ## Ideas not built (in priority order)
-1. Code signing (Azure Trusted Signing) — removes SmartScreen and most AV heuristics flags; then set
-   `Updater.ExpectedSigner` so updates must carry that signature.
-2. Per-device exclusions ("never touch this driver"), persisted in `reports\exclusions.json`.
-4. Windows OS updates too (same WUA search without `Type='Driver'`) behind a toggle.
-5. Name unknown USB vendors with the public `usb.ids` list.
-6. Driver uninstall (`pnputil /delete-driver oemNN.inf /uninstall`) from the All devices card, with confirmation.
+1. Code signing: SignPath Foundation signs open-source projects free from a GitHub Actions build (TinyNvidiaUpdateChecker
+   and DriverStoreExplorer use it); needs an OSI license and a CI build first. Then set `Updater.ExpectedSigner`.
+2. CI: build + tests on every push (windows runner has csc v4 and NSIS via choco), release from a tag with build
+   provenance attestation. Pushing `.github/workflows` needs the gh token's `workflow` scope.
+3. Opt-in unattended app updates from the weekly check (apps only, never drivers), like Winget-AutoUpdate.
+4. Publish to winget (winget-pkgs manifest), ideally automated per release.
+5. Windows OS updates too (same WUA search without `Type='Driver'`) behind a toggle.
+6. Name unknown USB vendors with the public `usb.ids` list.
+7. Driver uninstall (`pnputil /delete-driver oemNN.inf /uninstall`) from the All devices card, with confirmation.
 
 ## Out of scope (say so in the UI, don't fake it)
 - Bluetooth consumer headphones/earbuds — firmware updates go through the phone app.

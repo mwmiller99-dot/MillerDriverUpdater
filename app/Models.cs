@@ -45,7 +45,7 @@ namespace Mdu
     public class WuDriver
     {
         public string Title, Manufacturer, Model, Provider, Class, VersionDate, HardwareId;
-        public bool Optional;
+        public bool Optional, Hidden;
         public double SizeMB;
         [ScriptIgnore] public object Update;   // the WUA IUpdate COM object; lives in the MTA, never touched by the UI thread
     }
@@ -66,9 +66,9 @@ namespace Mdu
 
     public class NvidiaDriver
     {
-        public string Gpu, Installed, Version, Url, Name = "GeForce Game Ready Driver", ReleaseDate, Psid, Pfid, Lookup, Error;
+        public string Gpu, Installed, Version, Url, Name = "GeForce Game Ready Driver", ReleaseDate, Psid, Pfid, Lookup, Error, DetailsUrl;
         public double SizeBytes;
-        public bool Notebook, Available;
+        public bool Notebook, Available, Skipped;
     }
 
     public class NvidiaInstallResult
@@ -108,8 +108,19 @@ namespace Mdu
         public string Message;
     }
 
+    // One line of this app's own history: what it installed, rolled back or hid.
+    public class HistoryEntry
+    {
+        public string When, What, Version, Source, Result;
+        public bool Ok;
+    }
+
     public class ScanResult
     {
+        public List<WuDriver> HiddenDrivers = new List<WuDriver>();          // hidden in Windows Update itself
+        public List<WingetUpgrade> PinnedApps = new List<WingetUpgrade>();   // winget pins (Name, Id, Installed)
+        public string SkippedNvidia;                                         // an NVIDIA version the person skipped
+        public List<HistoryEntry> History = new List<HistoryEntry>();
         public string Error, WuError, WingetError, ReportHtml, ReportJson;
         public SystemInfo System;
         public int DeviceCount;

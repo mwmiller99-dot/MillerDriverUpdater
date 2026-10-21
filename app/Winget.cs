@@ -205,6 +205,67 @@ namespace Mdu
             return results;
         }
 
+        // Hiding an app update = a winget pin: `winget upgrade` leaves pinned apps out (verified with winget 1.29), and the
+        // choice lives in winget itself. Unpin brings it back.
+        public static void Pin(string id)
+        {
+            ProcResult r = Invoke(new[] { "pin", "add", "--id", id, "--exact", "--accept-source-agreements", "--disable-interactivity" }, 120000);
+            if (r.ExitCode != 0 && !Rx.IsMatch(r.Output, "already exists")) throw new InvalidOperationException("winget could not pin " + id + ": " + Util.Last(Lines(r.Output)));
+            Log.Diag("Pinned " + id + " in winget.");
+        }
+
+        public static void Unpin(string id)
+        {
+            ProcResult r = Invoke(new[] { "pin", "remove", "--id", id, "--exact", "--accept-source-agreements", "--disable-interactivity" }, 120000);
+            if (r.ExitCode != 0 && !Rx.IsMatch(r.Output, "no pin|not found|does not exist")) throw new InvalidOperationException("winget could not unpin " + id + ": " + Util.Last(Lines(r.Output)));
+            Log.Diag("Unpinned " + id + " in winget.");
+        }
+
+        public static List<WingetUpgrade> Pins()
+        {
+            ProcResult r = Invoke(new[] { "pin", "list", "--accept-source-agreements", "--disable-interactivity" }, 60000);
+            return ParsePinTable(r.Lines);
+        }
+
+        static List<string> Lines(string text)
+        {
+            List<string> keep = new List<string>();
+            foreach (string l in (text ?? "").Replace("\r\n", "\n").Split('\n')) if (l.Trim().Length > 0) keep.Add(l.Trim());
+            return keep;
+        }
+
+        // Pure: `winget pin list` table (Name, Id, Version, Source, Pin type) -> Name / Id / Installed. Unit tested.
+        public static List<WingetUpgrade> ParsePinTable(IEnumerable<string> lines)
+        {
+            List<WingetUpgrade> pins = new List<WingetUpgrade>();
+            int nameAt = -1, idAt = -1, verAt = -1, srcAt = -1;
+            bool inRows = false;
+            foreach (string raw in lines)
+            {
+                if (raw == null) continue;
+                string line = raw.TrimEnd('\r');
+                if (Rx.IsMatch(line, @"^\s*Name\s+Id\s+Version"))
+                {
+                    nameAt = line.IndexOf("Name", StringComparison.Ordinal);
+                    idAt = line.IndexOf("Id", nameAt + 4, StringComparison.Ordinal);
+                    verAt = line.IndexOf("Version", StringComparison.Ordinal);
+                    srcAt = line.IndexOf("Source", StringComparison.Ordinal);
+                    inRows = false;
+                    continue;
+                }
+                if (nameAt < 0) continue;
+                if (!inRows) { if (Rx.IsMatch(line, @"^\s*-{5,}\s*$")) inRows = true; continue; }
+                if (string.IsNullOrWhiteSpace(line)) { inRows = false; continue; }
+                WingetUpgrade p = new WingetUpgrade();
+                p.Name = Take(line, nameAt, idAt);
+                p.Id = Take(line, idAt, verAt);
+                p.Installed = Take(line, verAt, srcAt);
+                p.Kind = "pinned";
+                if (p.Id.Length > 0) pins.Add(p);
+            }
+            return pins;
+        }
+
         // Software with an upgrade available.
         public static List<WingetUpgrade> Upgrades()
         {

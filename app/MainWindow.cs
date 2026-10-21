@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Markup;
@@ -70,7 +71,17 @@ namespace Mdu
         public CheckBox CheckBox;
         public ProgressBar Bar;
         public TextBlock BarText;
-        public string Name, Kind, HardwareId;
+        public TextBlock Secondary;
+        public TextBlock CardCount;   // the count pill of the card this row is counted in (lowered when it is hidden)
+        public string Name, Kind, HardwareId, Version;
+    }
+
+    // A small text link on a row's second line.
+    class RowLink
+    {
+        public string Text, Tip;
+        public RoutedEventHandler Click;
+        public RowLink(string text, string tip, RoutedEventHandler click) { Text = text; Tip = tip; Click = click; }
     }
 
     class Card
@@ -78,6 +89,7 @@ namespace Mdu
         public Border Border;
         public StackPanel Body;
         public Button Action;
+        public TextBlock CountText;   // the number in the header pill
     }
 
     class MainWindow
@@ -112,6 +124,8 @@ namespace Mdu
         readonly HashSet<Row> _finished = new HashSet<Row>();
         readonly Dictionary<string, Button> _toggle = new Dictionary<string, Button>();
         Row _nvRow;
+        Card _hiddenCard, _historyCard;
+        Border _allDevicesBorder;
         NvidiaDriver _nvInfo;
 
         public MainWindow()
@@ -250,7 +264,12 @@ namespace Mdu
             left.Orientation = Orientation.Horizontal;
             left.VerticalAlignment = VerticalAlignment.Center;
             left.Children.Add(NewText(title, 15, FontWeights.SemiBold));
-            if (!string.IsNullOrEmpty(count)) left.Children.Add(NewPill(count, countKind));
+            if (!string.IsNullOrEmpty(count))
+            {
+                Border pill = NewPill(count, countKind);
+                c.CountText = pill.Child as TextBlock;
+                left.Children.Add(pill);
+            }
             Grid.SetColumn(left, 0);
             head.Children.Add(left);
             if (actionText != null)
@@ -281,14 +300,15 @@ namespace Mdu
         {
             while (d != null && d != stop)
             {
-                if (d is ButtonBase) return true;   // CheckBox is a ButtonBase too
+                if (d is ButtonBase || d is Hyperlink) return true;   // CheckBox is a ButtonBase too
                 d = d is Visual ? VisualTreeHelper.GetParent(d) : LogicalTreeHelper.GetParent(d);
             }
             return false;
         }
 
         Row NewRow(string primary, string secondary = null, string right = null, string tag = null, string tagKind = "muted",
-                   bool checkable = false, bool isChecked = false, string buttonText = null, RoutedEventHandler onClick = null, bool last = false)
+                   bool checkable = false, bool isChecked = false, string buttonText = null, RoutedEventHandler onClick = null, bool last = false,
+                   RowLink[] links = null)
         {
             Row row = new Row();
             Grid grid = new Grid();
@@ -310,7 +330,27 @@ namespace Mdu
             StackPanel text = new StackPanel();
             text.VerticalAlignment = VerticalAlignment.Center;
             text.Children.Add(NewText(primary, 13, FontWeights.SemiBold));
-            if (!string.IsNullOrEmpty(secondary)) text.Children.Add(NewText(secondary, 12, null, _brush["Text2"]));
+            if (!string.IsNullOrEmpty(secondary) || links != null)
+            {
+                TextBlock sec = NewText(secondary, 12, null, _brush["Text2"]);
+                // Small text links at the end of the second line (What's New, Hide): quiet, no extra buttons.
+                if (links != null)
+                {
+                    foreach (RowLink l in links)
+                    {
+                        if (sec.Inlines.Count > 0) sec.Inlines.Add(new Run("   "));
+                        Hyperlink h = new Hyperlink(new Run(l.Text));
+                        h.Foreground = _brush["Accent"];
+                        h.TextDecorations = null;
+                        h.Cursor = Cursors.Hand;
+                        if (l.Tip != null) h.ToolTip = l.Tip;
+                        h.Click += l.Click;
+                        sec.Inlines.Add(h);
+                    }
+                }
+                row.Secondary = sec;
+                text.Children.Add(sec);
+            }
             if (checkable)
             {
                 // Per-item progress, hidden until this row is being downloaded/installed.
@@ -583,6 +623,7 @@ namespace Mdu
             _sections.Children.Clear();
             _driverRows.Clear(); _driverOrder.Clear(); _driverByTitle.Clear(); _appRows.Clear(); _appOrder.Clear(); _finished.Clear(); _toggle.Clear();
             _nvRow = null; _nvInfo = null;
+            _hiddenCard = null; _historyCard = null; _allDevicesBorder = null;
             _rebootBanner.Visibility = Visibility.Collapsed;
             _report.Visibility = Visibility.Collapsed;
             _rescan.Visibility = Visibility.Collapsed;
@@ -647,6 +688,8 @@ namespace Mdu
             ShowApps(r, appsNormal, appsUnknown, appsSelf);
             ShowVendorApps(r, nv, nvAvail);
             ShowBackups(r.Backups);
+            ShowHidden(r);
+            ShowHistory(r.History);
             ShowAllDevices(r.Inventory);
             _primaryMode = "install";
             UpdatePrimaryButton();
@@ -729,9 +772,15 @@ namespace Mdu
                 // GeForce driver straight from nvidia.com: no NVIDIA App, no account.
                 string sec = "Installed " + nv.Installed + "  " + Util.Dot + "  from nvidia.com, NVIDIA signature checked before install, driver only (no NVIDIA App, no account)";
                 if (nv.Lookup == "generic") sec += "  " + Util.Dot + "  your GPU name was not in NVIDIA's list, so this is the current unified GeForce driver";
-                _nvRow = NewRow("NVIDIA " + nv.Name + " " + nv.Version, sec, right: nv.SizeBytes > 0 ? Util.FormatBytes(nv.SizeBytes) : null,
-                                tag: "nvidia.com", tagKind: "ok", checkable: true, isChecked: true, last: r.Drivers.Count == 0);
+                string nvWhat = "NVIDIA " + nv.Name + " " + nv.Version;
+                List<RowLink> nvLinks = new List<RowLink>();
+                if (nv.DetailsUrl != null) nvLinks.Add(new RowLink("What's new", "NVIDIA's release notes for this driver", (s, e) => Open(nv.DetailsUrl)));
+                nvLinks.Add(new RowLink("Skip this version", "Don't offer this NVIDIA driver again; a newer one will be offered",
+                    (s, e) => HideUpdate(_nvRow, nvWhat, "nvidia.com", () => Skips.Set("nvidia", nv.Version), () => Skips.Set("nvidia", null))));
+                _nvRow = NewRow(nvWhat, sec, right: nv.SizeBytes > 0 ? Util.FormatBytes(nv.SizeBytes) : null,
+                                tag: "nvidia.com", tagKind: "ok", checkable: true, isChecked: true, last: r.Drivers.Count == 0, links: nvLinks.ToArray());
                 _nvInfo = nv;
+                _nvRow.CardCount = card.CountText;
                 card.Body.Children.Add(_nvRow.Element);
             }
             if (r.Drivers.Count == 0 && r.WuError == null && !nvAvail) AddNote(card.Body, "No driver updates for this hardware right now.");
@@ -743,9 +792,13 @@ namespace Mdu
                 if (!string.IsNullOrEmpty(d.Manufacturer)) parts.Add(d.Manufacturer);
                 if (!string.IsNullOrEmpty(d.Class)) parts.Add(d.Class);
                 if (!string.IsNullOrEmpty(d.VersionDate)) parts.Add("version date " + d.VersionDate);
-                Row row = NewRow(d.Title, string.Join(" " + Util.Dot + " ", parts.ToArray()), right: d.SizeMB > 0 ? d.SizeMB.ToString("0.0", Util.Inv) + " MB" : null,
-                                 tag: d.Optional ? "Optional" : null, checkable: true, isChecked: !d.Optional, last: i == r.Drivers.Count - 1);
+                Row row = null;
+                row = NewRow(d.Title, string.Join(" " + Util.Dot + " ", parts.ToArray()), right: d.SizeMB > 0 ? d.SizeMB.ToString("0.0", Util.Inv) + " MB" : null,
+                             tag: d.Optional ? "Optional" : null, checkable: true, isChecked: !d.Optional, last: i == r.Drivers.Count - 1,
+                             links: new[] { new RowLink("Hide", "Hide this driver in Windows Update, so neither this app nor Windows installs it (Unhide brings it back)",
+                                 (s, e) => HideUpdate(row, d.Title, "Windows Update", () => WindowsUpdate.SetHidden(d, true), () => WindowsUpdate.SetHidden(d, false))) });
                 row.HardwareId = d.HardwareId;
+                row.CardCount = card.CountText;
                 _driverRows[d.Title] = row;
                 _driverOrder.Add(d.Title);
                 _driverByTitle[d.Title] = d;
@@ -774,15 +827,17 @@ namespace Mdu
                 WingetUpgrade a = ordered[i];
                 if (_appRows.ContainsKey(a.Id)) continue;
                 bool last = i == ordered.Count - 1 && self.Count == 0;
-                Row row;
+                Row row = null;
                 // Apps start unticked: most of the time people just want the drivers. "Check all" ticks them in one go.
                 if (a.Kind == "unknown")
                     row = NewRow(a.Name, a.Id + "  " + Util.Dot + "  winget cannot read the installed version, so it cannot tell whether this is outdated. Tick it to reinstall the newest version anyway; it runs after the others.",
-                                 right: "newest is " + a.Available, tag: "Version unknown", checkable: true, last: last);
+                                 right: "newest is " + a.Available, tag: "Version unknown", checkable: true, last: last, links: HideAppLink(a, () => row));
                 else
-                    row = NewRow(a.Name, a.Id, right: a.Installed + "  " + Util.Arrow + "  " + a.Available, checkable: true, last: last);
+                    row = NewRow(a.Name, a.Id, right: a.Installed + "  " + Util.Arrow + "  " + a.Available, checkable: true, last: last, links: HideAppLink(a, () => row));
                 row.Name = a.Name;
                 row.Kind = a.Kind;
+                row.Version = a.Available;
+                row.CardCount = card.CountText;
                 _appRows[a.Id] = row;
                 _appOrder.Add(a.Id);
                 card.Body.Children.Add(row.Element);
@@ -791,10 +846,133 @@ namespace Mdu
             {
                 WingetUpgrade a = self[i];
                 string pattern = !string.IsNullOrEmpty(a.AppMatch) ? a.AppMatch : System.Text.RegularExpressions.Regex.Escape(a.Name);
-                Row row = NewRow(a.Name, a.Id + "  " + Util.Dot + "  " + a.Note + ". Open it and it updates on its own.", right: "newest is " + a.Available,
-                                 buttonText: "Open", last: i == self.Count - 1, onClick: (s, e) => LaunchApp(pattern, null));
+                Row row = null;
+                row = NewRow(a.Name, a.Id + "  " + Util.Dot + "  " + a.Note + ". Open it and it updates on its own.", right: "newest is " + a.Available,
+                             buttonText: "Open", last: i == self.Count - 1, onClick: (s, e) => LaunchApp(pattern, null), links: HideAppLink(a, () => row));
                 card.Body.Children.Add(row.Element);
             }
+        }
+
+        // ---------------------------------------------------------------- hide / unhide, history
+
+        RowLink[] HideAppLink(WingetUpgrade a, Func<Row> row)
+        {
+            return new[] { new RowLink("Hide", "Pin this app in winget so its updates are left out (Unhide brings it back)",
+                (s, e) => HideUpdate(row(), a.Name, "winget", () => Winget.Pin(a.Id), () => Winget.Unpin(a.Id))) };
+        }
+
+        // Hide: the source itself keeps the choice (hidden in Windows Update, pinned in winget, NVIDIA version skipped);
+        // the row moves to Hidden updates, where Unhide undoes it.
+        async void HideUpdate(Row row, string what, string source, Action hide, Action unhide)
+        {
+            if (row == null) return;
+            if (_installing || _busy || _updating) { _status.Text = "Wait for the current install to finish, then hide it."; return; }
+            _status.Text = "Hiding " + what + "...";
+            string err = null;
+            try { await Task.Run(hide); } catch (Exception ex) { err = Errors.Text(ex); }
+            if (err != null) { _status.Text = "Couldn't hide that: " + Errors.Friendly(err, true); return; }
+            if (row.CheckBox != null) { row.CheckBox.IsChecked = false; row.CheckBox.IsEnabled = false; _finished.Add(row); }
+            row.Element.Visibility = Visibility.Collapsed;
+            int count;
+            if (row.CardCount != null && int.TryParse(row.CardCount.Text, out count) && count > 0) row.CardCount.Text = (count - 1).ToString();
+            AddHiddenRow(what, source, unhide);
+            History.Add("Hid " + what, "", source, true, "Hidden by you");
+            _status.Text = what + " is hidden. Unhide it any time under Hidden updates.";
+            RefreshHeadline();
+            UpdatePrimaryButton();
+        }
+
+        Card EnsureHiddenCard()
+        {
+            if (_hiddenCard != null) return _hiddenCard;
+            _hiddenCard = NewCard("Hidden updates", "Updates you chose not to install. They stay hidden until you Unhide them.", null, "muted");
+            // NewCard adds it at the end; keep it above History and All devices.
+            Border anchor = _historyCard != null ? _historyCard.Border : _allDevicesBorder;
+            if (anchor != null)
+            {
+                _sections.Children.Remove(_hiddenCard.Border);
+                _sections.Children.Insert(_sections.Children.IndexOf(anchor), _hiddenCard.Border);
+            }
+            return _hiddenCard;
+        }
+
+        void AddHiddenRow(string what, string source, Action unhide)
+        {
+            Card card = EnsureHiddenCard();
+            string why = source == "Windows Update" ? "Hidden in Windows Update, so Windows won't install it on its own either"
+                       : source == "winget" ? "Pinned in winget, so its updates are left out"
+                       : "This version is skipped; a newer one will be offered";
+            Row row = null;
+            row = NewRow(what, why, buttonText: "Unhide", onClick: (s, e) => Unhide((Button)s, row, what, source, unhide));
+            card.Body.Children.Add(row.Element);
+        }
+
+        async void Unhide(Button b, Row row, string what, string source, Action unhide)
+        {
+            b.IsEnabled = false;
+            string err = null;
+            try { await Task.Run(unhide); } catch (Exception ex) { err = Errors.Text(ex); }
+            if (err != null) { b.IsEnabled = true; _status.Text = "Couldn't unhide that: " + Errors.Friendly(err, true); return; }
+            b.Content = "Unhidden";
+            if (row != null && row.Secondary != null) row.Secondary.Text = "Offered again from the next Check Again.";
+            History.Add("Unhid " + what, "", source, true, "Offered again");
+            _status.Text = what + " will be offered again. Check Again to see it in the list.";
+        }
+
+        void ShowHidden(ScanResult r)
+        {
+            foreach (WuDriver d in r.HiddenDrivers) AddHiddenRow(d.Title, "Windows Update", () => WindowsUpdate.SetHidden(d, false));
+            foreach (WingetUpgrade p in r.PinnedApps) AddHiddenRow(p.Name, "winget", () => Winget.Unpin(p.Id));
+            if (r.SkippedNvidia != null) AddHiddenRow("NVIDIA driver " + r.SkippedNvidia, "nvidia.com", () => Skips.Set("nvidia", null));
+        }
+
+        // After a Hide: the headline counts what is still on offer.
+        void RefreshHeadline()
+        {
+            int n = 0;
+            foreach (Row r in CheckableRows()) if (!_finished.Contains(r)) n++;
+            int problems = _scan != null ? _scan.Problems.Count : 0;
+            if (n == 0 && problems == 0) _headline.Text = "You're up to date.";
+            else if (n == 0) _headline.Text = "No updates, but something needs attention.";
+            else _headline.Text = n == 1 ? "1 update available" : n + " updates available";
+        }
+
+        // What this app installed, rolled back or hid, newest first; collapsed like All devices.
+        void ShowHistory(List<HistoryEntry> history)
+        {
+            if (history.Count == 0) return;
+            _historyCard = NewCard("History", "What this app installed, rolled back or hid on this PC, newest first.", history.Count.ToString(), "muted");
+            StackPanel list = new StackPanel();
+            list.Visibility = Visibility.Collapsed;
+            bool built = false;
+            Button toggle = NewButton("Show", null);
+            toggle.HorizontalAlignment = HorizontalAlignment.Left;
+            toggle.Margin = new Thickness(0, 4, 0, 4);
+            toggle.Click += (s, e) =>
+            {
+                if (list.Visibility == Visibility.Collapsed)
+                {
+                    if (!built)
+                    {
+                        int shown = 0;
+                        for (int i = history.Count - 1; i >= 0 && shown < 50; i--, shown++)
+                        {
+                            HistoryEntry h = history[i];
+                            DateTime when;
+                            string whenText = DateTime.TryParse(h.When, Util.Inv, System.Globalization.DateTimeStyles.None, out when) ? when.ToString("MMM d, h:mm tt") : h.When;
+                            string title = h.What + (string.IsNullOrEmpty(h.Version) ? "" : " " + h.Version);
+                            list.Children.Add(NewRow(title, whenText + " " + Util.Dot + " " + h.Source + " " + Util.Dot + " " + h.Result,
+                                tag: h.Ok ? null : "Failed", tagKind: "bad", last: i == 0 || shown == 49).Element);
+                        }
+                        built = true;
+                    }
+                    list.Visibility = Visibility.Visible;
+                    toggle.Content = "Hide";
+                }
+                else { list.Visibility = Visibility.Collapsed; toggle.Content = "Show"; }
+            };
+            _historyCard.Body.Children.Add(toggle);
+            _historyCard.Body.Children.Add(list);
         }
 
         void LaunchApp(string pattern, string url)
@@ -890,6 +1068,7 @@ namespace Mdu
             List<Device> present = inventory.FindAll(d => d.Present && !string.IsNullOrEmpty(d.Name));
             present.Sort((a, b) => { int c = string.Compare(a.Class, b.Class, StringComparison.OrdinalIgnoreCase); return c != 0 ? c : string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase); });
             Card card = NewCard("All devices", "Every present device and the driver it is using now.", present.Count.ToString(), "muted");
+            _allDevicesBorder = card.Border;
             StackPanel list = new StackPanel();
             list.Visibility = Visibility.Collapsed;
             bool built = false;
@@ -955,6 +1134,7 @@ namespace Mdu
                     if (!row.CheckBox.IsEnabled || row.CheckBox.IsChecked != true) continue;
                     (row.Kind == "unknown" ? unknown : normal).Add(id);   // "version unknown" ones run last
                     req.WingetNames[id] = row.Name;
+                    if (row.Version != null) req.WingetVersions[id] = row.Version;
                 }
                 req.WingetIds.AddRange(normal);
                 req.WingetIds.AddRange(unknown);
@@ -1109,11 +1289,12 @@ namespace Mdu
             catch (Exception ex) { err = Errors.Text(ex); }
             _busy = false;
             Done();
+            History.Add("Rolled back " + device, "", "driver backup", err == null && res.Success, err == null && res.Success ? "Previous driver restored" : "Rollback failed");
             if (err != null) ShowError("Rollback failed: " + err);
             else if (!res.Success) ShowError("Rollback failed:\n" + res.Output);
             else
             {
-                _status.Text = "Previous driver restored for " + device + ".";
+                _status.Text = "Previous driver restored for " + device + ". If Windows Update offers the newer driver again, click Hide on its row and Windows leaves it alone.";
                 if (res.RebootRequired) _rebootBanner.Visibility = Visibility.Visible;
             }
             UpdatePrimaryButton();

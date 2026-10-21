@@ -1,10 +1,12 @@
-## Miller Driver Updater 2.2.1
+## Miller Driver Updater 2.3.0
 
-- **Setup no longer looks stuck when an antivirus removes the app.** Some antivirus programs (Malwarebytes, for
-  example) remove new, unsigned programs on a machine-learning guess. Setup used to stop at that point with a window
-  that looked like it was still working. Now it pauses on a clear message: add the install folder to the antivirus'
-  allow list, click **Retry**, and Setup puts the file back and carries on. Cancel leaves everything as it was.
-  The same applies to updates started from the app's Update button.
+- **Hide an update.** Every driver and app update has a small **Hide** link; the NVIDIA driver has **Skip this
+  version**. The choice is kept by the source itself: a driver is hidden in Windows Update (so Windows won't install it
+  on its own either - handy after a Roll Back), an app is pinned in winget, and an NVIDIA version is skipped until a
+  newer one comes out. A **Hidden updates** card lists them with **Unhide**.
+- **History.** A card lists what the app installed, rolled back or hid on this PC, newest first.
+- **What's new** on the NVIDIA driver row opens nvidia.com's release notes for that driver.
+- The repository now has a security policy, a changelog, a contributing guide and issue forms.
 
-Install: download `MillerDriverUpdater-2.2.1-Setup.exe` below and run it. Windows may say "Windows protected your PC":
-click *More info*, then *Run anyway* (the app is not code-signed yet). Copies on 2.2.0 offer this update themselves.
+Install: download `MillerDriverUpdater-2.3.0-Setup.exe` below and run it. Windows may say "Windows protected your PC":
+click *More info*, then *Run anyway* (the app is not code-signed yet). Copies on 2.2.0 or later offer this update themselves.

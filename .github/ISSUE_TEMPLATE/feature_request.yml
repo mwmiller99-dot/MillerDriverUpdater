@@ -1,0 +1,16 @@
+name: Idea
+description: Suggest something the app should do.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The app only uses official sources (Windows Update, winget, nvidia.com, vendor apps) and keeps to one simple
+        window - ideas that fit those two rules have the best chance.
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?
+      description: What you were trying to do, and what the app could do about it.
+    validations:
+      required: true

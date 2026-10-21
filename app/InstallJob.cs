@@ -18,6 +18,7 @@ namespace Mdu
         public List<WuDriver> Drivers = new List<WuDriver>();
         public List<string> WingetIds = new List<string>();
         public Dictionary<string, string> WingetNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, string> WingetVersions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);   // the version being installed, for History
         public NvidiaDriver Nvidia;
         public bool SkipRestorePoint;
     }
@@ -129,6 +130,12 @@ namespace Mdu
             }
         }
 
+        static string Version(InstallRequest req, string id)
+        {
+            string v;
+            return req.WingetVersions.TryGetValue(id, out v) ? v : "";
+        }
+
         public InstallResult Run(InstallRequest req)
         {
             InstallResult res = new InstallResult();
@@ -168,6 +175,7 @@ namespace Mdu
                         if (nr.Success && nr.DownloadBytes > 0 && nr.DownloadSeconds > 0)
                             summary = string.Format(Util.Inv, "Installed {0}: {1} in {2} s ({3}), setup {4} s", nr.Version, Util.FormatBytes(nr.DownloadBytes), nr.DownloadSeconds, Util.FormatSpeed(nr.DownloadBytes / nr.DownloadSeconds), nr.InstallSeconds);
                         Set("nvidia", nr.Success ? "done" : "failed", 100, nr.Success ? summary : Errors.Friendly(nr.Message, true));
+                        History.Add("NVIDIA " + req.Nvidia.Name, req.Nvidia.Version, "nvidia.com", nr.Success, nr.Success ? "Installed" : Errors.Friendly(nr.Message, true));
                     }
                     catch (Exception ex)
                     {
@@ -175,6 +183,7 @@ namespace Mdu
                         nr.Version = req.Nvidia.Version; nr.Message = Errors.Text(ex);
                         res.Nvidia = nr;
                         Set("nvidia", "failed", 100, Errors.Friendly(nr.Message, true));
+                        History.Add("NVIDIA " + req.Nvidia.Name, req.Nvidia.Version, "nvidia.com", false, Errors.Friendly(nr.Message, true));
                         Log.Diag("NVIDIA install failed: " + ex);
                     }
                     Fraction("nvidia", 1.0);
@@ -200,11 +209,13 @@ namespace Mdu
                         if (r.DownloadBytes > 0 && r.Seconds > 0)
                             summary = string.Format(Util.Inv, "Updated: {0} in {1} s ({2})", Util.FormatBytes(r.DownloadBytes), r.Seconds, Util.FormatSpeed(r.DownloadBytes / r.Seconds));
                         Set(id, r.Success ? "done" : "failed", 100, r.Success ? summary : Errors.WingetExitText(r.ExitCode, r.Output));
+                        History.Add(name, Version(req, id), "winget", r.Success, r.Success ? "Updated" : Errors.WingetExitText(r.ExitCode, r.Output));
                     }
                     catch (Exception ex)
                     {
                         outcome.Success = false; outcome.Code = -1;
                         Set(id, "failed", 100, Errors.Friendly(Errors.Text(ex), true));
+                        History.Add(name, Version(req, id), "winget", false, Errors.Friendly(Errors.Text(ex), true));
                     }
                     res.Apps.Add(outcome);
                     Fraction(id, 1.0);
@@ -272,6 +283,7 @@ namespace Mdu
                 res.Drivers.Add(o);
                 Fraction(d.Key, 1.0);
                 Set(d.Key, d.Value == 2 ? "done" : "failed", 100, txt);
+                History.Add(d.Key, "", "Windows Update", d.Value == 2, txt);
             }
             if (r.RebootRequired) res.Reboot = true;
             InstallStat st = new InstallStat(); st.What = "Drivers"; st.Bytes = r.DownloadBytes; st.DownloadSeconds = r.DownloadSeconds; st.InstallSeconds = r.InstallSeconds;

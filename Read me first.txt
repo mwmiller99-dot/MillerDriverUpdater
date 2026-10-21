@@ -8,7 +8,7 @@ What it does
   restore point and backs up each driver first; it never restarts the PC by itself.
 
 Install (once, about 10 seconds)
-  1. Double-click  MillerDriverUpdater-2.2.1-Setup.exe  and click through (Next, Next, Install).
+  1. Double-click  MillerDriverUpdater-2.3.0-Setup.exe  and click through (Next, Next, Install).
      Or skip installing: MillerDriverUpdater.exe runs from anywhere, on its own.
      If Windows says "Windows protected your PC": click "More info", then "Run anyway". That warning
      appears for any program that is not from a big software company.

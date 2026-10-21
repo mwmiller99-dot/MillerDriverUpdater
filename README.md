@@ -19,16 +19,17 @@ tool only uses sources you can trust:
 
 Either:
 
-- **Setup:** double-click `MillerDriverUpdater-2.2.0-Setup.exe`, then Next, Next, Install. It installs for your user
+- **Setup:** double-click `MillerDriverUpdater-2.2.1-Setup.exe`, then Next, Next, Install. It installs for your user
   account only (`%LOCALAPPDATA%\Programs\Miller Driver Updater`), puts **Miller Driver Updater** in the Start menu, offers
   a desktop shortcut, and can switch on the Monday check. Uninstall from Settings > Apps.
 - **Portable:** just run `MillerDriverUpdater.exe` from anywhere. It is the whole app (about 300 KB).
 
 If Windows says "Windows protected your PC", click *More info*, then *Run anyway*: that screen appears for every program
 that is not code-signed. Some antivirus programs (Malwarebytes, for example) quarantine new unsigned programs
-on a machine-learning guess ("MachineLearning/Anomalous"). Setup notices when that happens, changes nothing, and says
-what to do: restore the exe from the antivirus' quarantine and always allow it, then run Setup again. Report it to the
-vendor as a false positive too. Code signing is the real fix (see below).
+on a machine-learning guess ("MachineLearning/Anomalous"). Setup notices when that happens and pauses with
+**Retry / Cancel**: add the install folder to the antivirus' allow list, click Retry, and Setup puts the file back and
+carries on (Cancel leaves everything as it was). Report it to the vendor as a false positive too. Code signing is the
+real fix (see below).
 
 Say Yes to the "make changes to your device" prompt when the app opens: installing drivers needs it.
 
@@ -118,7 +119,7 @@ every Windows 10 1903+ and Windows 11 PC), then runs the tests. No Visual Studio
 C# 5 because that is what that compiler speaks. `build.cmd notest` skips the tests.
 
 The Setup.exe needs NSIS 3 (`winget install --id NSIS.NSIS --exact`). After `build.cmd`:
-`cd installer` then `"%ProgramFiles(x86)%\NSIS\makensis.exe" mdu.nsi` → `dist\MillerDriverUpdater-2.2.0-Setup.exe`
+`cd installer` then `"%ProgramFiles(x86)%\NSIS\makensis.exe" mdu.nsi` → `dist\MillerDriverUpdater-2.2.1-Setup.exe`
 (it packs `dist\MillerDriverUpdater.exe`).
 
 ## Layout

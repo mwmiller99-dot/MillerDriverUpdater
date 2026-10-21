@@ -8,7 +8,7 @@ What it does
   restore point and backs up each driver first; it never restarts the PC by itself.
 
 Install (once, about 10 seconds)
-  1. Double-click  MillerDriverUpdater-2.2.0-Setup.exe  and click through (Next, Next, Install).
+  1. Double-click  MillerDriverUpdater-2.2.1-Setup.exe  and click through (Next, Next, Install).
      Or skip installing: MillerDriverUpdater.exe runs from anywhere, on its own.
      If Windows says "Windows protected your PC": click "More info", then "Run anyway". That warning
      appears for any program that is not from a big software company.
@@ -17,8 +17,8 @@ Install (once, about 10 seconds)
   3. Say Yes to the "make changes to your device" prompt when the app opens - installing drivers needs it.
 
   If your antivirus removes it ("MachineLearning", "Anomalous", "Generic"...): that is a guess about new
-  programs, not a real detection. Setup says so and changes nothing. Restore MillerDriverUpdater.exe from the
-  antivirus' quarantine and choose to always allow it, then run Setup again.
+  programs, not a real detection. Setup pauses and says so: add the folder it names to the antivirus' allow list
+  (Malwarebytes: Settings, Allow List, Add, Allow a file or folder), then click Retry.
 
 Using it
   - It checks first (usually under a minute; the percentage in the headline tracks it). Nothing changes during a check.

@@ -17,9 +17,9 @@ using Microsoft.Win32;
 [assembly: AssemblyProduct("Miller Driver Updater")]
 [assembly: AssemblyCompany("Miller Driver Updater")]
 [assembly: AssemblyCopyright("Official sources only: Windows Update, nvidia.com, winget.")]
-[assembly: AssemblyVersion("2.2.0.0")]
-[assembly: AssemblyFileVersion("2.2.0.0")]
-[assembly: AssemblyInformationalVersion("2.2.0")]
+[assembly: AssemblyVersion("2.2.1.0")]
+[assembly: AssemblyFileVersion("2.2.1.0")]
+[assembly: AssemblyInformationalVersion("2.2.1")]
 // csc does not stamp this by itself; without it the runtime applies .NET 4.0 compatibility quirks (old TLS defaults etc.).
 [assembly: System.Runtime.Versioning.TargetFramework(".NETFramework,Version=v4.8", FrameworkDisplayName = ".NET Framework 4.8")]
 [assembly: System.Runtime.InteropServices.ComVisible(false)]
@@ -29,7 +29,7 @@ namespace Mdu
     public static class AppInfo
     {
         public const string Name = "Miller Driver Updater";
-        public const string Version = "2.2.0";   // bump together with AssemblyVersion above and APPVER in installer/mdu.nsi
+        public const string Version = "2.2.1";   // bump together with AssemblyVersion above and APPVER in installer/mdu.nsi
         public const string ScheduleTaskName = "Miller Driver Updater - weekly check";
 
         static string _dataDir;

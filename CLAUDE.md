@@ -69,8 +69,10 @@ the target by which stub exists; paths in mdu.nsi must use backslashes there, `F
 contents checked with 7-Zip (exe byte-identical to dist, Read me first, README, Uninstall.exe).
 **Antivirus:** a consumer antivirus's machine-learning heuristic (reported as `MachineLearning/Anomalous`) quarantines
 freshly built, unsigned exes on first launch, on copy, and right after Setup writes or runs them; a folder allow-list
-entry did not reliably stop it. Microsoft Defender did not flag it. Setup runs `--ping` and checks the exe survived
-before touching an earlier version, and explains restore + allow if not. Real fix: code signing (Azure Trusted
+entry did not reliably stop it, and restoring from quarantine does not add an allow entry (Malwarebytes keeps
+them in RtpConfig.json `rtpExclusions`). Microsoft Defender did not flag it. Setup runs `--ping` and checks the exe
+survived before touching an earlier version; if not it pauses on Retry/Cancel (2.2.1: 2.2.0 just stopped, which looked
+like a stuck download): Retry copies the exe in again and pings again, Cancel puts any `.old` back. Real fix: code signing (Azure Trusted
 Signing) and false-positive reports to the vendor. Do not tweak the binary to dodge a detector.
 2.1.0 (rename): built and tested the same way.
 2.2.0 (self-update): `Updater.cs` + update banner + Setup `/UPDATE`; 109 tests pass (14 for release parsing); download +
@@ -132,7 +134,8 @@ address, never a personal email; never commit reports, logs, screenshots or anyt
   → SHA-256 must match → Authenticode: if `ExpectedSigner` is set the signature must be valid and match, otherwise
   unsigned (0x800B0100) is accepted but a present-and-broken signature is not → `Setup /S /UPDATE` → app shuts down.
   Setup /UPDATE waits for the exe to be free, keeps it as `.old`, installs, `--ping` + check; if the antivirus took the
-  new exe the `.old` is put back and reopened (message shown even in /S); else `.old` deleted and the new exe started.
+  new exe it pauses on Retry/Cancel (shown even in /S): Retry re-copies and re-pings, Cancel puts the `.old` back and
+  reopens it; on success `.old` is deleted and the new exe started.
   The relaunched app inherits Setup's (= the old app's) elevation, so no second UAC prompt. Publishing: `release.cmd`
   (reads Version from Core.cs and Repo from Updater.cs with findstr; gh CLI or printed manual steps).
   Unsigned releases will be quarantined by Malwarebytes-style ML on every update; signing first is the real fix.

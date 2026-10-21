@@ -19,7 +19,7 @@ Unicode True
 
 !define APPNAME   "Miller Driver Updater"
 !ifndef APPVER
-  !define APPVER  "2.2.0"
+  !define APPVER  "2.2.1"
 !endif
 !define APPID     "MillerDriverUpdater"
 !define APPEXE    "MillerDriverUpdater.exe"
@@ -96,7 +96,7 @@ Function .onInit
   ${EndIf}
 FunctionEnd
 
-!define AVTEXT "This happens to new programs that are not code-signed. Malwarebytes, for example, reports it as $\"MachineLearning/Anomalous$\" - a guess about unknown programs, not a real virus.$\r$\n$\r$\nTo fix it:$\r$\n1. Open the antivirus' quarantine (Malwarebytes: Detection History), select MillerDriverUpdater.exe and restore it, choosing to always allow it if asked. Or add this folder to its allow list:$\r$\n     $INSTDIR$\r$\n2. Run this setup again."
+!define AVTEXT "Your antivirus removed MillerDriverUpdater.exe as soon as it was installed. This happens to new programs that are not code-signed (Malwarebytes reports it as $\"MachineLearning/Anomalous$\") - a guess about unknown programs, not a real virus.$\r$\n$\r$\nSetup is paused. To continue:$\r$\n1. In the antivirus, add this folder to its allow list (Malwarebytes: Settings, Allow List, Add, Allow a file or folder):$\r$\n     $INSTDIR$\r$\n2. Click Retry. Setup puts the file back itself; there is no need to restore it from the quarantine.$\r$\n$\r$\nIf this message comes back, the allow-list entry did not take. Cancel stops here and leaves everything as it was."
 
 ; ---- install ----
 Section "Miller Driver Updater" SecMain
@@ -129,24 +129,34 @@ Section "Miller Driver Updater" SecMain
   ; Some antivirus programs delete a new, unsigned program when it is written or first run (Malwarebytes reports it
   ; as "MachineLearning/Anomalous"). Run it once (--ping only starts and exits) and check
   ; before touching anything else, so an earlier version stays as it was and the person is told what to do.
+  ; If it is removed, Setup pauses on a Retry/Cancel message instead of stopping: the person allows and restores the
+  ; file in the antivirus, clicks Retry, and Setup runs it once more and carries on.
+  ping_exe:
   nsExec::Exec '"$INSTDIR\${APPEXE}" --ping'
   Pop $0
   Sleep 3000
   ${IfNot} ${FileExists} "$INSTDIR\${APPEXE}"
+    ${If} $IsUpdate == 1
+      ; An update is started from the app with /S, so the message is shown even then (no /SD).
+      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${AVTEXT}" IDRETRY retry_exe
+    ${Else}
+      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${AVTEXT}" /SD IDCANCEL IDRETRY retry_exe
+    ${EndIf}
+    ; Cancel: put the earlier version back (an update reopens it) and stop.
     ${If} ${FileExists} "$INSTDIR\${APPEXE}.old"
       Rename "$INSTDIR\${APPEXE}.old" "$INSTDIR\${APPEXE}"
     ${EndIf}
     ${If} $IsUpdate == 1
-      ; An update is started from the app with /S, so this message is shown even then (no /SD), and the
-      ; previous version is opened again.
-      MessageBox MB_OK|MB_ICONEXCLAMATION "Your antivirus removed the new MillerDriverUpdater.exe as soon as it was installed, so the update was not applied. Your current version is unchanged.$\r$\n$\r$\n${AVTEXT}"
-      ${If} ${FileExists} "$INSTDIR\${APPEXE}"
-        Exec '"$INSTDIR\${APPEXE}"'
-      ${EndIf}
-    ${Else}
-      MessageBox MB_OK|MB_ICONEXCLAMATION "Your antivirus removed MillerDriverUpdater.exe as soon as it was installed, so nothing was changed.$\r$\n$\r$\n${AVTEXT}" /SD IDOK
+    ${AndIf} ${FileExists} "$INSTDIR\${APPEXE}"
+      Exec '"$INSTDIR\${APPEXE}"'
     ${EndIf}
-    Abort "MillerDriverUpdater.exe was removed by the antivirus. Restore and allow it in the antivirus, then run setup again."
+    Abort "Setup stopped: the antivirus removed MillerDriverUpdater.exe. Nothing else was changed."
+    retry_exe:
+    ${IfNot} ${FileExists} "$INSTDIR\${APPEXE}"
+      ; Not restored (yet): copy it in again from this Setup.
+      File "..\dist\${APPEXE}"
+    ${EndIf}
+    Goto ping_exe
   ${EndIf}
   Delete "$INSTDIR\${APPEXE}.old"
 

@@ -1,42 +1,39 @@
 Miller Driver Updater
 =====================
-(Earlier versions were called Miller Driver Update. Installing this replaces them and keeps their reports.)
+Keeps this PC's drivers and apps up to date, from official sources only: Windows Update, nvidia.com and winget.
+Free and open source (MIT License): https://github.com/mwmiller99-dot/MillerDriverUpdater
 
 What it does
-  Checks this PC for driver updates (Windows Update), the newest NVIDIA GeForce driver (straight from
-  nvidia.com, no NVIDIA account) and program updates (winget). You pick what to install; it makes a
-  restore point and backs up each driver first; it never restarts the PC by itself.
+  Checks for driver updates (Windows Update), the newest NVIDIA GeForce driver (from nvidia.com, no NVIDIA
+  account needed) and app updates (winget). You choose what to install. Before a driver changes, it creates a
+  restore point and a backup, and it never restarts your PC on its own.
 
-Install (once, about 10 seconds)
-  1. Double-click  MillerDriverUpdater-2.3.0-Setup.exe  and click through (Next, Next, Install).
-     Or skip installing: MillerDriverUpdater.exe runs from anywhere, on its own.
-     If Windows says "Windows protected your PC": click "More info", then "Run anyway". That warning
-     appears for any program that is not from a big software company.
-  2. It installs into your own user folder, so no administrator password is needed.
-     Tick "Open Miller Driver Updater now" on the last page, or find it in the Start menu.
-  3. Say Yes to the "make changes to your device" prompt when the app opens - installing drivers needs it.
+Installing
+  1. Run MillerDriverUpdater-<version>-Setup.exe. It installs for your user account only, so no administrator
+     password is needed. (MillerDriverUpdater.exe also runs on its own, without installing.)
+  2. When the app opens, Windows asks whether to let it make changes: installing drivers requires administrator
+     rights. Checking for updates changes nothing; only Install does.
 
-  If your antivirus removes it ("MachineLearning", "Anomalous", "Generic"...): that is a guess about new
-  programs, not a real detection. Setup pauses and says so: add the folder it names to the antivirus' allow list
-  (Malwarebytes: Settings, Allow List, Add, Allow a file or folder), then click Retry.
+  The installer is not code-signed yet, so Windows SmartScreen ("Windows protected your PC") or an antivirus may
+  warn about it. Every release on GitHub lists the file's SHA-256 checksum and a GitHub build attestation, so you
+  can confirm you have the official build (see SECURITY.md on GitHub). If an antivirus removes the app during
+  setup, Setup pauses, explains how to allow it, and continues when you click Retry.
 
 Using it
-  - It checks first (usually under a minute; the percentage in the headline tracks it). Nothing changes during a check.
-  - Drivers come ticked; apps are listed but not ticked. Click a row to tick it, or "Check all". Click Install.
-  - Apps that update themselves (Battle.net, Steam, Discord, Chrome...) sit at the bottom of the Apps list with an
-    "Open" button: open them and they update on their own. They are never run from here.
+  - The check takes under a minute; nothing changes while it runs.
+  - Drivers start ticked; apps start unticked. Click a row to tick it, or use Check all. Then click Install.
+  - Apps that update themselves (Steam, Discord, browsers...) are listed last with an Open button. Open them and
+    they update on their own; this app never runs them.
   - Each row shows its own progress; the bar at the top is the whole job.
-  - If it says "Restart to finish", restart when convenient. Nothing restarts on its own.
-  - "Before you start" at the top lists anything likely to get in the way (on battery, low disk space,
-    Windows Update service switched off...) with a button that fixes it.
-  - "Needs attention" lists devices Windows cannot drive. When an update on the same screen fixes one, it says so.
+  - If it says "Restart to finish", restart when it suits you. Nothing restarts on its own.
+  - "Before you start" lists anything likely to get in the way (battery, low disk space, Windows Update service
+    turned off...) with a button that fixes it.
+  - "Needs attention" lists devices Windows reports a problem with, and says when an update on screen fixes one.
+  - Hide (on any row) stops an update from being offered; Unhide brings it back.
 
 If something goes wrong
-  - Click "Report a Problem" (bottom right). It puts a small zip on your desktop with the app's logs -
-    no personal files. Send that zip to whoever gave you the app.
-  - "Roll Back" appears next to any driver this app replaced; it puts the previous one back.
-  - To remove the app: Settings > Apps > Installed apps > Miller Driver Updater > Uninstall.
-
-Where things come from
-  Only official sources: Windows Update, nvidia.com (signature checked before anything runs), and
-  winget. No third-party driver database, no scraping, no bundled extras.
+  - Report a Problem (bottom of the window) saves the app's logs to a zip on your desktop and opens GitHub, where
+    you can describe the problem. The zip lists device names and driver versions (no personal files), so share
+    it only with someone helping you, not on a public page.
+  - Roll Back appears next to any driver this app replaced; it puts the previous one back.
+  - To uninstall: Settings > Apps > Installed apps > Miller Driver Updater > Uninstall.

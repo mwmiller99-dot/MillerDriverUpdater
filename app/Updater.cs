@@ -33,6 +33,7 @@ namespace Mdu
         public const string ExpectedSigner = "";
 
         public static bool Configured { get { return Repo.Length > 0; } }
+        public static string RepoUrl { get { return "https://github.com/" + Repo; } }
 
         const string AssetPattern = @"^MillerDriverUpdater-\d+(\.\d+){1,3}-Setup\.exe$";
 

@@ -58,9 +58,68 @@
         </Setter.Value>
       </Setter>
     </Style>
+    <!-- Checkbox drawn to match the theme (the stock WPF one is a white Windows 7 box, glaring in dark mode). -->
     <Style TargetType="CheckBox">
       <Setter Property="VerticalAlignment" Value="Center"/>
       <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="CheckBox">
+            <StackPanel Orientation="Horizontal" Background="Transparent">
+              <Grid Width="18" Height="18" VerticalAlignment="Center">
+                <Border x:Name="Box" CornerRadius="4" BorderThickness="1.5" BorderBrush="{DynamicResource Text2}" Background="Transparent"/>
+                <Path x:Name="Tick" Data="M 4.6 9.3 L 7.7 12.3 L 13.4 5.9" Stroke="White" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Visibility="Collapsed"/>
+              </Grid>
+              <ContentPresenter x:Name="Label" Margin="8,0,0,0" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+            </StackPanel>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="Box" Property="Background" Value="{DynamicResource Accent}"/>
+                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                <Setter TargetName="Tick" Property="Visibility" Value="Visible"/>
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+              <Trigger Property="Content" Value="{x:Null}"><Setter TargetName="Label" Property="Margin" Value="0"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <!-- Thin rounded vertical scrollbar in the theme's colors (horizontal ones keep the default). -->
+    <ControlTemplate x:Key="PageArea" TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate>
+    <Style TargetType="ScrollBar">
+      <Style.Triggers>
+        <Trigger Property="Orientation" Value="Vertical">
+          <Setter Property="Width" Value="12"/>
+          <Setter Property="MinWidth" Value="12"/>
+          <Setter Property="Template">
+            <Setter.Value>
+              <ControlTemplate TargetType="ScrollBar">
+                <Track x:Name="PART_Track" IsDirectionReversed="True" Focusable="False">
+                  <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageUpCommand" Focusable="False" Template="{StaticResource PageArea}"/></Track.DecreaseRepeatButton>
+                  <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageDownCommand" Focusable="False" Template="{StaticResource PageArea}"/></Track.IncreaseRepeatButton>
+                  <Track.Thumb>
+                    <Thumb>
+                      <Thumb.Template>
+                        <ControlTemplate TargetType="Thumb">
+                          <Border x:Name="T" Width="6" CornerRadius="3" HorizontalAlignment="Center" Background="{DynamicResource Text2}" Opacity="0.4"/>
+                          <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="T" Property="Opacity" Value="0.65"/></Trigger>
+                            <Trigger Property="IsDragging" Value="True"><Setter TargetName="T" Property="Opacity" Value="0.8"/></Trigger>
+                          </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                      </Thumb.Template>
+                    </Thumb>
+                  </Track.Thumb>
+                </Track>
+              </ControlTemplate>
+            </Setter.Value>
+          </Setter>
+        </Trigger>
+      </Style.Triggers>
     </Style>
     <Style TargetType="ToolTip">
       <Setter Property="Background" Value="{DynamicResource Card}"/>
@@ -86,21 +145,12 @@
           <ColumnDefinition Width="Auto"/>
           <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <!-- MDU logo tile: white rounded square, blue gradient letters (same mark as assets/mdu.ico) -->
-        <Border Grid.Column="0" Width="56" Height="56" CornerRadius="14" Margin="0,0,16,0" VerticalAlignment="Center" Background="White" BorderBrush="#DADEE6" BorderThickness="1">
-          <TextBlock Text="MDU" FontFamily="Segoe UI Black, Segoe UI" FontWeight="Black" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,1">
-            <TextBlock.Foreground>
-              <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                <GradientStop Color="#0A84FF" Offset="0"/>
-                <GradientStop Color="#1A6CF0" Offset="1"/>
-              </LinearGradientBrush>
-            </TextBlock.Foreground>
-          </TextBlock>
-        </Border>
+        <!-- The app icon (assets/mdu.ico, drawn by tools/ArtGen.cs); the code sets its picture. -->
+        <Image x:Name="Logo" Grid.Column="0" Width="60" Height="60" Margin="-4,0,12,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-          <TextBlock Text="Miller Driver Updater" FontSize="12" FontWeight="SemiBold" Foreground="#1A6CF0" Margin="0,0,0,1"/>
+          <TextBlock Text="Miller Driver Updater" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource Text2}" Margin="0,0,0,1"/>
           <TextBlock x:Name="Headline" FontSize="26" FontWeight="SemiBold" Text="Checking for updates..." TextWrapping="Wrap"/>
-          <TextBlock x:Name="Subline" FontSize="13" Foreground="{DynamicResource Text2}" Margin="0,4,0,0" TextWrapping="Wrap" Text="Reading your devices, Windows Update, winget and nvidia.com at the same time. Nothing is changed by a scan."/>
+          <TextBlock x:Name="Subline" FontSize="13" Foreground="{DynamicResource Text2}" Margin="0,4,0,0" TextWrapping="Wrap" Text="Checking Windows Update, nvidia.com and winget. Checking never changes anything."/>
         </StackPanel>
       </Grid>
       <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
@@ -150,8 +200,8 @@
       </Grid.ColumnDefinitions>
       <TextBlock x:Name="Status" Grid.Column="0" Foreground="{DynamicResource Text2}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text=""/>
       <CheckBox x:Name="WeeklyCheck" Grid.Column="1" Content="Check weekly and notify me" Foreground="{DynamicResource Text2}" Margin="16,0,0,0" ToolTip="Mondays at 10:00, silently. A notification appears only when there is something to install."/>
-      <Button x:Name="HelpButton" Grid.Column="2" Style="{StaticResource Secondary}" Content="Report a Problem" Padding="10,3" FontSize="12" Margin="16,0,0,0" ToolTip="Zips this app's logs onto your desktop so you can send them to whoever gave you the app."/>
-      <TextBlock x:Name="VersionText" Grid.Column="3" Foreground="{DynamicResource Text2}" FontSize="11" VerticalAlignment="Center" Margin="12,0,0,0" Text=""/>
+      <Button x:Name="HelpButton" Grid.Column="2" Style="{StaticResource Secondary}" Content="Report a Problem" Padding="10,3" FontSize="12" Margin="16,0,0,0" ToolTip="Saves this app's logs to a zip on your desktop and opens GitHub to report the problem"/>
+      <TextBlock x:Name="VersionText" Grid.Column="3" Foreground="{DynamicResource Text2}" FontSize="11" VerticalAlignment="Center" Margin="12,0,0,0" Text="" ToolTip="Release notes and source code on GitHub"/>
     </Grid>
   </Grid>
 </Window>

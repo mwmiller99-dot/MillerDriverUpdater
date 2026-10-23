@@ -1,12 +1,15 @@
-## Miller Driver Updater 2.3.0
+## Miller Driver Updater 2.4.0
 
-- **Hide an update.** Every driver and app update has a small **Hide** link; the NVIDIA driver has **Skip this
-  version**. The choice is kept by the source itself: a driver is hidden in Windows Update (so Windows won't install it
-  on its own either - handy after a Roll Back), an app is pinned in winget, and an NVIDIA version is skipped until a
-  newer one comes out. A **Hidden updates** card lists them with **Unhide**.
-- **History.** A card lists what the app installed, rolled back or hid on this PC, newest first.
-- **What's new** on the NVIDIA driver row opens nvidia.com's release notes for that driver.
-- The project is now MIT-licensed, with a security policy, a changelog, a contributing guide and issue forms.
+A cleaner, more professional look. No change to what gets installed or how.
 
-Install: download `MillerDriverUpdater-2.3.0-Setup.exe` below and run it. Windows may say "Windows protected your PC":
-click *More info*, then *Run anyway* (the app is not code-signed yet). Copies on 2.2.0 or later offer this update themselves.
+- **New icon** in the window, taskbar, Start menu, installer and report.
+- **Theme-matched controls:** checkboxes and the scrollbar follow light/dark mode instead of using the stock Windows 7
+  look. Shorter, plainer wording throughout.
+- **Publisher details:** the app and Setup now show the publisher and MIT copyright, and Settings > Apps links to the
+  project page, issues and releases.
+- **Report a Problem** offers to open a GitHub issue; the version number at the bottom right links to the project.
+
+**Install:** download `MillerDriverUpdater-2.4.0-Setup.exe` below and run it. Copies on 2.2.0 or later offer this update
+themselves. The installer is not code-signed yet, so Windows may show "Windows protected your PC" (*More info*, then
+*Run anyway*). To confirm the file is the official build:
+`gh attestation verify MillerDriverUpdater-2.4.0-Setup.exe --repo mwmiller99-dot/MillerDriverUpdater`.

@@ -153,6 +153,13 @@ address, never a personal email; never commit reports, logs, screenshots or anyt
   builds, tests, makes Setup + SHA256SUMS, `actions/attest-build-provenance`, then `gh release create` with
   release-notes.md; run by hand it is a dry run (artifacts only). `release.cmd` = local build check + tag + push;
   `release.cmd local` = the old publish-from-this-PC path. Pushing workflow files needs the gh token's `workflow` scope.
+- **Look and trust (2.4)**: the owner asked for it to look less "virusy/scammy". Icon = blue tile, white chip, up arrow;
+  `tools\art.cmd` (ArtGen.cs) draws mdu.ico, PNGs, logo.svg, installer wizard/header BMPs and docs\social-preview.png
+  from one design - edit ArtGen.cs, never the outputs. `tools\screenshot.cmd` (ScreenshotGen.cs) renders the real
+  window with made-up sample data (HOME-PC, common apps) for the README: never use a real scan for repo images.
+  Publisher everywhere (AssemblyCompany, NSIS CompanyName/Publisher, LICENSE) = `mwmiller99-dot`. CheckBox and vertical
+  ScrollBar are re-templated in MainWindow.xaml to follow the theme. Avoid scareware tells: no red counts for problems,
+  no urgency words, no "click Yes" instructions, no "send it to whoever gave you the app".
 
 ## Ideas not built (in priority order)
 1. Code signing: SignPath Foundation signs open-source projects free from a GitHub Actions build (TinyNvidiaUpdateChecker

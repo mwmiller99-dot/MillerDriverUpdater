@@ -1,10 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Miller Driver Updater</title>
   <defs>
-    <linearGradient id="mdu-blue" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0A84FF"/>
-      <stop offset="1" stop-color="#1A6CF0"/>
-    </linearGradient>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2F80FF"/><stop offset="1" stop-color="#1458D9"/></linearGradient>
   </defs>
-  <rect x="1" y="1" width="254" height="254" rx="56" fill="#FFFFFF" stroke="#DADEE6" stroke-width="2"/>
-  <text x="128" y="172" text-anchor="middle" font-family="Inter Display, Inter, Segoe UI, Arial, sans-serif" font-weight="900" font-size="118" letter-spacing="-6" fill="url(#mdu-blue)">MDU</text>
+  <rect x="12" y="12" width="232" height="232" rx="56" fill="url(#tile)"/>
+  <g fill="#FFFFFF">
+    <rect x="55.2" y="91.08" width="24.23" height="11.44" rx="3.43"/>
+    <rect x="176.57" y="91.08" width="24.23" height="11.44" rx="3.43"/>
+    <rect x="91.08" y="55.2" width="11.44" height="24.23" rx="3.43"/>
+    <rect x="91.08" y="176.57" width="11.44" height="24.23" rx="3.43"/>
+    <rect x="55.2" y="122.28" width="24.23" height="11.44" rx="3.43"/>
+    <rect x="176.57" y="122.28" width="24.23" height="11.44" rx="3.43"/>
+    <rect x="122.28" y="55.2" width="11.44" height="24.23" rx="3.43"/>
+    <rect x="122.28" y="176.57" width="11.44" height="24.23" rx="3.43"/>
+    <rect x="55.2" y="153.48" width="24.23" height="11.44" rx="3.43"/>
+    <rect x="176.57" y="153.48" width="24.23" height="11.44" rx="3.43"/>
+    <rect x="153.48" y="55.2" width="11.44" height="24.23" rx="3.43"/>
+    <rect x="153.48" y="176.57" width="11.44" height="24.23" rx="3.43"/>
+    <rect x="76" y="76" width="104" height="104" rx="16.64"/>
+  </g>
+  <polygon points="128,95.76 156.08,124.88 137.88,124.88 137.88,160.24 118.12,160.24 118.12,124.88 99.92,124.88" fill="#1A66E8" stroke="#1A66E8" stroke-width="3.64" stroke-linejoin="round"/>
 </svg>

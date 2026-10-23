@@ -146,7 +146,14 @@ namespace Mdu
             try
             {
                 using (Stream ico = typeof(MainWindow).Assembly.GetManifestResourceStream("Mdu.mdu.ico"))
-                    if (ico != null) Window.Icon = BitmapFrame.Create(ico, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+                    if (ico != null)
+                    {
+                        IconBitmapDecoder dec = new IconBitmapDecoder(ico, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+                        BitmapFrame big = dec.Frames[0];
+                        foreach (BitmapFrame f in dec.Frames) if (f.PixelWidth > big.PixelWidth) big = f;
+                        Window.Icon = big;
+                        ((Image)Window.FindName("Logo")).Source = big;
+                    }
             }
             catch { }
             Window.TaskbarItemInfo = new TaskbarItemInfo();
@@ -170,7 +177,12 @@ namespace Mdu
             _updateNotes = (Button)Window.FindName("UpdateNotesButton");
             _weekly = (CheckBox)Window.FindName("WeeklyCheck");
             _scroller = (ScrollViewer)Window.FindName("Scroller");
-            _version.Text = "v" + AppInfo.Version;
+            Hyperlink about = new Hyperlink(new Run("v" + AppInfo.Version));
+            about.Foreground = _brush["Text2"];
+            about.TextDecorations = null;
+            about.Cursor = Cursors.Hand;
+            about.Click += (s, e) => Open(Updater.RepoUrl);
+            _version.Inlines.Add(about);
 
             _timer = new DispatcherTimer(DispatcherPriority.Normal, Window.Dispatcher);
             _timer.Interval = TimeSpan.FromMilliseconds(250);
@@ -339,7 +351,7 @@ namespace Mdu
                     foreach (RowLink l in links)
                     {
                         if (sec.Inlines.Count > 0) sec.Inlines.Add(new Run("   "));
-                        Hyperlink h = new Hyperlink(new Run(l.Text));
+                        Hyperlink h = new Hyperlink(new Run(l.Text.Replace(' ', ' ')));   // a link wraps as one piece
                         h.Foreground = _brush["Accent"];
                         h.TextDecorations = null;
                         h.Cursor = Cursors.Hand;
@@ -598,7 +610,7 @@ namespace Mdu
         {
             // Plain words first, the raw message after "Details:" for whoever reads the support bundle.
             string friendly = Errors.Friendly(text);
-            if (friendly == text) friendly += "\n\nIf this keeps happening, click Report a Problem at the bottom of the window and send the zip it makes.";
+            if (friendly == text) friendly += "\n\nIf this keeps happening, click Report a Problem at the bottom of the window.";
             MessageBox.Show(Window, friendly, AppInfo.Name, MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
@@ -628,7 +640,7 @@ namespace Mdu
             _report.Visibility = Visibility.Collapsed;
             _rescan.Visibility = Visibility.Collapsed;
             _headline.Text = "Checking for updates... 0%";
-            _subline.Text = "Reading your devices, Windows Update, winget and nvidia.com at the same time. Nothing is changed by a scan.";
+            _subline.Text = "Checking Windows Update, nvidia.com and winget. Checking never changes anything.";
             _primary.Content = "Checking...";
             _primary.IsEnabled = false;
             _status.Text = "Starting...";
@@ -680,7 +692,7 @@ namespace Mdu
             _subline.Text = string.Format("Checked {0} {1} {2} devices {1} {3} {1} took {4}", r.Finished.ToString("h:mm tt"), Util.Dot, r.DeviceCount,
                 r.System != null ? r.System.Computer : Environment.MachineName, Util.FormatDuration(r.Seconds));
             if (r.ReportHtml != null) _report.Visibility = Visibility.Visible;
-            _status.Text = total > 0 ? "Tick what you want (click anywhere on a row), then Install. A restore point is made before any driver changes." : "Nothing to install right now.";
+            _status.Text = total > 0 ? "Select what you want, then click Install. Drivers get a restore point first." : "Nothing to install right now.";
 
             ShowPreflight(r.Preflight);
             ShowProblems(r, nv);
@@ -728,7 +740,7 @@ namespace Mdu
         void ShowProblems(ScanResult r, NvidiaDriver nv)
         {
             if (r.Problems.Count == 0) return;
-            Card card = NewCard("Needs attention", "Windows reports these devices with an error. A driver update below may fix them; otherwise check the vendor app.", r.Problems.Count.ToString(), "bad");
+            Card card = NewCard("Needs attention", "Windows reports a problem with these devices.", r.Problems.Count.ToString(), "warn");
             int lookups = 0;
             for (int i = 0; i < r.Problems.Count; i++)
             {
@@ -763,14 +775,14 @@ namespace Mdu
 
         void ShowDrivers(ScanResult r, NvidiaDriver nv, bool nvAvail)
         {
-            string sub = "From Windows Update, matched to this exact hardware. Optional ones are left unchecked.";
+            string sub = "From Windows Update, matched to your hardware. Optional drivers start unticked.";
             if (r.WuError != null) sub = "Windows Update check failed: " + Errors.Friendly(r.WuError, true);
             Card card = NewCard("Drivers", sub, (r.Drivers.Count + (nvAvail ? 1 : 0)).ToString(), "info", "Uncheck all", (s, e) => ToggleAll("Drivers"));
             _toggle["Drivers"] = card.Action;
             if (nvAvail)
             {
                 // GeForce driver straight from nvidia.com: no NVIDIA App, no account.
-                string sec = "Installed " + nv.Installed + "  " + Util.Dot + "  from nvidia.com, NVIDIA signature checked before install, driver only (no NVIDIA App, no account)";
+                string sec = "Installed " + nv.Installed + "  " + Util.Dot + "  from nvidia.com, signature verified before install  " + Util.Dot + "  driver only, no NVIDIA App or account";
                 if (nv.Lookup == "generic") sec += "  " + Util.Dot + "  your GPU name was not in NVIDIA's list, so this is the current unified GeForce driver";
                 string nvWhat = "NVIDIA " + nv.Name + " " + nv.Version;
                 List<RowLink> nvLinks = new List<RowLink>();
@@ -814,8 +826,8 @@ namespace Mdu
 
         void ShowApps(ScanResult r, List<WingetUpgrade> normal, List<WingetUpgrade> unknown, List<WingetUpgrade> self)
         {
-            string sub = "Installed programs with a newer version, via winget. Not selected by default; tick the ones you want, or Check all.";
-            if (self.Count > 0) sub += " " + self.Count + " update themselves and are listed at the bottom with an Open button.";
+            string sub = "Newer versions found by winget. Tick the ones you want, or Check all.";
+            if (self.Count > 0) sub += " Apps that update themselves are listed last.";
             if (r.WingetError != null) sub = "winget check failed: " + Errors.Friendly(r.WingetError, true);
             Card card = NewCard("Apps", sub, (normal.Count + unknown.Count).ToString(), "info", "Check all", (s, e) => ToggleAll("Apps"));
             _toggle["Apps"] = card.Action;
@@ -830,7 +842,7 @@ namespace Mdu
                 Row row = null;
                 // Apps start unticked: most of the time people just want the drivers. "Check all" ticks them in one go.
                 if (a.Kind == "unknown")
-                    row = NewRow(a.Name, a.Id + "  " + Util.Dot + "  winget cannot read the installed version, so it cannot tell whether this is outdated. Tick it to reinstall the newest version anyway; it runs after the others.",
+                    row = NewRow(a.Name, a.Id + "  " + Util.Dot + "  winget can't read the installed version. Tick it to reinstall the newest one; it runs last.",
                                  right: "newest is " + a.Available, tag: "Version unknown", checkable: true, last: last, links: HideAppLink(a, () => row));
                 else
                     row = NewRow(a.Name, a.Id, right: a.Installed + "  " + Util.Arrow + "  " + a.Available, checkable: true, last: last, links: HideAppLink(a, () => row));
@@ -988,7 +1000,7 @@ namespace Mdu
             List<Peripheral> known = r.Peripherals.FindAll(p => p.Known && p.Present);
             known.Sort((a, b) => { int c = string.Compare(a.Vendor, b.Vendor, StringComparison.OrdinalIgnoreCase); return c != 0 ? c : string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase); });
             int other = r.Peripherals.FindAll(p => !p.Known && p.Present).Count;
-            Card card = NewCard("Graphics and peripherals", "Newest GPU drivers and device firmware live in each vendor's own app. Open it from here to check.", (r.Gpus.Count + known.Count).ToString(), "muted");
+            Card card = NewCard("Graphics and peripherals", "Firmware for these comes from each maker's own app. Open it from here to check.", (r.Gpus.Count + known.Count).ToString(), "muted");
             int count = r.Gpus.Count + known.Count, i = 0;
             foreach (Gpu g in r.Gpus)
             {
@@ -1408,10 +1420,12 @@ namespace Mdu
             _help.IsEnabled = true;
             if (err != null) { ShowError("Couldn't collect the logs: " + err); return; }
             _status.Text = "Saved " + zip;
-            MessageBox.Show(Window, "A zip with this app's logs and the latest report is on your desktop:\n\n" + zip +
-                "\n\nSend that file to whoever gave you Miller Driver Updater. It contains device names, driver versions and the app's own logs - no personal files.",
-                "Report a Problem", MessageBoxButton.OK, MessageBoxImage.Information);
             try { Process.Start("explorer.exe", "/select,\"" + zip + "\""); } catch { }
+            // The zip names devices and driver versions, so it goes privately to whoever helps, not onto a public issue.
+            if (Ask("The app's logs and latest report are saved on your desktop:\n\n" + zip +
+                    "\n\nThe zip lists your device names and driver versions (no personal files), so share it only with someone helping you." +
+                    "\n\nOpen GitHub to describe the problem in a new issue?", MessageBoxImage.Information, MessageBoxButton.YesNo))
+                Open(Updater.RepoUrl + "/issues/new/choose");
         }
     }
 }

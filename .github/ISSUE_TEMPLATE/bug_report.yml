@@ -12,7 +12,7 @@ body:
     id: version
     attributes:
       label: App version
-      description: Bottom-right corner of the window (for example v2.3.0).
+      description: Bottom-right corner of the window (for example v2.4.0).
     validations:
       required: true
   - type: input

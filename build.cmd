@@ -21,7 +21,7 @@ if not exist dist mkdir dist
 echo Building dist\MillerDriverUpdater.exe ...
 "%FW%\csc.exe" /nologo /noconfig /target:winexe /platform:anycpu /optimize+ /warn:4 /nowarn:1702 ^
   /out:dist\MillerDriverUpdater.exe /win32icon:assets\mdu.ico /win32manifest:app\app.manifest ^
-  /resource:app\MainWindow.xaml,Mdu.MainWindow.xaml /resource:assets\mdu.ico,Mdu.mdu.ico ^
+  /resource:app\MainWindow.xaml,Mdu.MainWindow.xaml /resource:assets\mdu.ico,Mdu.mdu.ico /resource:assets\logo.svg,Mdu.logo.svg ^
   %REFS% app\*.cs
 if errorlevel 1 (
   echo BUILD FAILED

@@ -126,7 +126,7 @@ namespace Mdu
             catch (Exception ex)
             {
                 Log.Error("Window failed to start: " + ex);
-                MessageBox.Show("Miller Driver Updater could not start.\n\n" + ex.Message + "\n\nThe details were saved to:\n" + Log.ErrorPath + "\n\nSend that file to whoever gave you the app.",
+                MessageBox.Show("Miller Driver Updater could not start.\n\n" + ex.Message + "\n\nThe details were saved to:\n" + Log.ErrorPath + "\n\nPlease report it at " + Updater.RepoUrl + "/issues",
                     AppInfo.Name, MessageBoxButton.OK, MessageBoxImage.Error);
                 return 1;
             }

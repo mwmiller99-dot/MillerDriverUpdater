@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.4.0
+- **New look.** A new icon (a chip with an up arrow) in the window, taskbar, installer and HTML report, drawn from one
+  design by `tools\ArtGen.cs`. Checkboxes and the scrollbar now match the light/dark theme instead of the stock
+  Windows 7 controls. Shorter, plainer wording throughout; the "Needs attention" count is amber, not red.
+- **Proper publisher details.** The exe and Setup name the publisher and copyright (MIT) instead of a slogan; Settings
+  > Apps links to the project's page, issues and releases. The installer pictures carry the current name.
+- **Report a Problem** offers to open a GitHub issue and says to share the log zip privately. The version number at the
+  bottom right links to the project.
+- README: screenshots (made-up sample data, light and dark), an "Is it safe?" section, release badges.
+
 ## 2.3.0
 - **Hide an update.** Every driver and app update has a quiet **Hide** link; the NVIDIA driver has **Skip this
   version**. The choice is kept where it belongs: drivers are hidden in Windows Update itself (so Windows does not

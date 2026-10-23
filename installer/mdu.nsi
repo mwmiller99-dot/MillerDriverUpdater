@@ -19,13 +19,16 @@ Unicode True
 
 !define APPNAME   "Miller Driver Updater"
 !ifndef APPVER
-  !define APPVER  "2.3.0"
+  !define APPVER  "2.4.0"
 !endif
 !define APPID     "MillerDriverUpdater"
 !define APPEXE    "MillerDriverUpdater.exe"
 !define TASKNAME  "Miller Driver Updater - weekly check"
 !define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPID}"
-!define LNKDESC   "Update drivers and apps from official sources"
+!define LNKDESC   "Update drivers and apps from Windows Update, nvidia.com and winget"
+; Who publishes it: the GitHub account the source and releases live under (same as LICENSE and the exe's details).
+!define PUBLISHER "mwmiller99-dot"
+!define REPOURL   "https://github.com/mwmiller99-dot/MillerDriverUpdater"
 
 ; The earlier name (1.x and 2.0).
 !define OLDNAME   "Miller Driver Update"
@@ -48,8 +51,9 @@ VIAddVersionKey "ProductName"     "${APPNAME}"
 VIAddVersionKey "FileDescription" "${APPNAME} Setup"
 VIAddVersionKey "FileVersion"     "${APPVER}"
 VIAddVersionKey "ProductVersion"  "${APPVER}"
-VIAddVersionKey "CompanyName"     "${APPNAME}"
-VIAddVersionKey "LegalCopyright"  "Official sources only: Windows Update, nvidia.com, winget."
+VIAddVersionKey "CompanyName"     "${PUBLISHER}"
+VIAddVersionKey "LegalCopyright"  "Copyright (c) 2026 ${PUBLISHER}. MIT License."
+VIAddVersionKey "Comments"        "${REPOURL}"
 
 ; ---- look ----
 !define MUI_ICON   "..\assets\mdu.ico"
@@ -63,10 +67,10 @@ VIAddVersionKey "LegalCopyright"  "Official sources only: Windows Update, nvidia
 !define MUI_COMPONENTSPAGE_NODESC
 
 ; ---- pages ----
-!define MUI_WELCOMEPAGE_TITLE "Miller Driver Updater"
-!define MUI_WELCOMEPAGE_TEXT "This installs Miller Driver Updater for your user account. (Earlier versions were called Miller Driver Update; this replaces them and keeps their reports.)$\r$\n$\r$\nIt checks this PC for driver updates (Windows Update), the newest NVIDIA GeForce driver (straight from nvidia.com, no account) and program updates (winget). You choose what to install; it makes a restore point and backs up each driver first, and it never restarts the PC on its own.$\r$\n$\r$\nNo administrator rights are needed to install it. The app asks for them when it opens, because installing drivers needs them."
-!define MUI_FINISHPAGE_TITLE "Done"
-!define MUI_FINISHPAGE_TEXT "Miller Driver Updater is in the Start menu.$\r$\n$\r$\nWhen it opens, say Yes to the $\"make changes to your device$\" prompt - installing drivers needs it. The first check takes under a minute on most PCs. Nothing changes until you click Install."
+!define MUI_WELCOMEPAGE_TITLE "Welcome to Miller Driver Updater ${APPVER}"
+!define MUI_WELCOMEPAGE_TEXT "Miller Driver Updater keeps this PC's drivers and apps up to date, using Windows Update, nvidia.com and winget.$\r$\n$\r$\nYou choose what gets installed. Before a driver changes, it creates a restore point and a backup, and it never restarts your PC on its own.$\r$\n$\r$\nSetup installs for your user account and does not need administrator rights. Free and open source (MIT)."
+!define MUI_FINISHPAGE_TITLE "Installation complete"
+!define MUI_FINISHPAGE_TEXT "Miller Driver Updater is in your Start menu.$\r$\n$\r$\nWhen it opens, Windows asks whether to let it make changes: installing drivers requires administrator rights. Checking for updates changes nothing; only Install does."
 !define MUI_FINISHPAGE_RUN "$INSTDIR\${APPEXE}"
 !define MUI_FINISHPAGE_RUN_TEXT "Open Miller Driver Updater now"
 !define MUI_FINISHPAGE_SHOWREADME ""
@@ -207,7 +211,10 @@ Section "Miller Driver Updater" SecMain
   WriteRegStr   HKCU "Software\${APPID}" "InstallDir" "$INSTDIR"
   WriteRegStr   HKCU "${UNINSTKEY}" "DisplayName"          "${APPNAME}"
   WriteRegStr   HKCU "${UNINSTKEY}" "DisplayVersion"       "${APPVER}"
-  WriteRegStr   HKCU "${UNINSTKEY}" "Publisher"            "${APPNAME}"
+  WriteRegStr   HKCU "${UNINSTKEY}" "Publisher"            "${PUBLISHER}"
+  WriteRegStr   HKCU "${UNINSTKEY}" "URLInfoAbout"         "${REPOURL}"
+  WriteRegStr   HKCU "${UNINSTKEY}" "HelpLink"             "${REPOURL}/issues"
+  WriteRegStr   HKCU "${UNINSTKEY}" "URLUpdateInfo"        "${REPOURL}/releases"
   WriteRegStr   HKCU "${UNINSTKEY}" "DisplayIcon"          "$INSTDIR\${APPEXE},0"
   WriteRegStr   HKCU "${UNINSTKEY}" "InstallLocation"      "$INSTDIR"
   WriteRegStr   HKCU "${UNINSTKEY}" "UninstallString"      '"$INSTDIR\Uninstall.exe"'

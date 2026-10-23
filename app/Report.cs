@@ -61,7 +61,7 @@ namespace Mdu
             h.Append(" table{border-collapse:collapse;width:100%;font-size:13px} th,td{border-bottom:1px solid #eaeef2;padding:6px 8px;text-align:left;vertical-align:top}\n");
             h.Append(" th{background:#f6f8fa;font-weight:600} tr:hover td{background:#f6f8fa} .empty{color:#57606a;margin:0}\n .notes li{margin:4px 0}\n");
             h.Append("</style></head><body>\n");
-            h.Append("<h1><span style=\"display:inline-block;background:linear-gradient(#f0f6ff,#d6e5ff);border:1px solid #b0cbf8;border-radius:8px;color:#1a5fd0;font-weight:800;padding:2px 8px;margin-right:10px;font-size:18px;vertical-align:middle\">MDU</span>Miller Driver Updater report</h1>\n");
+            h.Append("<h1>" + LogoImg() + "Miller Driver Updater report</h1>\n");
             h.AppendFormat("<div class=\"sub\">{0} - {1} build {2} &middot; generated {3} &middot; {4} devices scanned &middot; pending reboot: {5}</div>\n",
                 Util.Html(s.Computer), Util.Html(s.OS), Util.Html(s.Build), plain["Generated"], scan.DeviceCount, s.PendingReboot);
             Section(h, "Devices with problems", scan.Problems, new[] { "Name", "Class", "Status", "Problem", "DriverVersion", "DriverDate" }, "No device is reporting an error.");
@@ -75,6 +75,23 @@ namespace Mdu
             h.Append("</ul></section>\n</body></html>\n");
             File.WriteAllText(htmlPath, h.ToString(), new UTF8Encoding(true));
             return htmlPath;
+        }
+
+        // The app icon (assets\logo.svg, embedded) inline, so the report is still one self-contained file.
+        static string LogoImg()
+        {
+            try
+            {
+                using (Stream st = typeof(Report).Assembly.GetManifestResourceStream("Mdu.logo.svg"))
+                using (MemoryStream m = new MemoryStream())
+                {
+                    if (st == null) return "";
+                    st.CopyTo(m);
+                    return "<img src=\"data:image/svg+xml;base64," + Convert.ToBase64String(m.ToArray()) +
+                           "\" width=\"36\" height=\"36\" alt=\"\" style=\"vertical-align:middle;margin:0 10px 4px 0\">";
+                }
+            }
+            catch { return ""; }
         }
 
         static void Section(StringBuilder h, string title, IList rows, string[] props, string empty)
@@ -100,8 +117,8 @@ namespace Mdu
             h.Append("</table></section>\n");
         }
 
-        // Zips the logs, the newest reports and a short system summary onto the desktop, for sending to whoever gave out
-        // the app. Never includes driver backups or anything outside the reports folder.
+        // Zips the logs, the newest reports and a short system summary onto the desktop, for sharing privately with
+        // whoever helps with a problem. Never includes driver backups or anything outside the reports folder.
         public static string SupportBundle(ScanResult lastScan, string dest = null)
         {
             if (string.IsNullOrEmpty(dest)) dest = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);

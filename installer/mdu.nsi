@@ -19,7 +19,7 @@ Unicode True
 
 !define APPNAME   "Miller Driver Updater"
 !ifndef APPVER
-  !define APPVER  "2.4.1"
+  !define APPVER  "2.5.0"
 !endif
 !define APPID     "MillerDriverUpdater"
 !define APPEXE    "MillerDriverUpdater.exe"

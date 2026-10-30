@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.5.0
 - **Motherboard and drives** card, for any PC: the BIOS version and its age (flagged once it is two years old), with
   the PC or motherboard maker's download page (ASUS, MSI, Gigabyte, ASRock, Dell, HP, Lenovo, Acer, Microsoft,
   Razer, Framework, Samsung) and its own updater app; the chipset package (AMD Chipset Software from amd.com, or Intel's

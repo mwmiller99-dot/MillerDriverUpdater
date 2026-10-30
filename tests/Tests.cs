@@ -130,6 +130,28 @@ static class Tests
         True(!Inventory.IsIntelDriverDevice("PCI\\VEN_10EC&DEV_8125", "Net"), "intel: Realtek Ethernet is not Intel");
         True(!Inventory.IsIntelDriverDevice("PCI\\VEN_8086&DEV_7A60", "System"), "intel: chipset parts stay with Windows Update");
         True(!Inventory.IsIntelDriverDevice("SWD\\MSRRAS\\MS_NDISWANIP", "Net"), "intel: virtual adapters are skipped");
+
+        string mk, prod;
+        Platform.Identify("System manufacturer", "System Product Name", "ASUSTeK COMPUTER INC.", "PRIME X570-P", out mk, out prod);
+        Eq("ASUS|PRIME X570-P", mk + "|" + prod, "platform: home-built PC -> the motherboard");
+        Platform.Identify("Micro-Star International Co., Ltd.", "To be filled by O.E.M.", "Micro-Star International Co., Ltd.", "MAG B650 TOMAHAWK WIFI (MS-7D75)", out mk, out prod);
+        Eq("MSI", mk, "platform: MSI board name cleaned");
+        Platform.Identify("Dell Inc.", "XPS 15 9530", "Dell Inc.", "0ABC12", out mk, out prod);
+        Eq("Dell|XPS 15 9530", mk + "|" + prod, "platform: brand laptop -> the laptop, not its board");
+        Platform.Identify("Gigabyte Technology Co., Ltd.", "Default string", "Gigabyte Technology Co., Ltd.", "B550 AORUS ELITE", out mk, out prod);
+        Eq("Gigabyte", mk, "platform: Gigabyte name cleaned");
+        Eq("Armoury Crate (desktops) / MyASUS (laptops)", Platform.MakerFor("ASUS").App, "platform: ASUS -> its updater");
+        True(Platform.MakerFor("Dell").Url.Contains("dell.com"), "platform: Dell -> dell.com");
+        True(Platform.MakerFor("Some Unknown Maker") == null, "platform: unknown maker -> no guess");
+        Eq(64, Platform.MonthsBetween(new DateTime(2021, 6, 15), new DateTime(2026, 10, 30)), "platform: BIOS age in months");
+        Eq("over 5 years old", Platform.AgeText(64), "platform: age text, years");
+        Eq("14 months old", Platform.AgeText(14), "platform: age text, months");
+        Eq("", Platform.AgeText(6), "platform: a recent BIOS says nothing");
+        Eq("Samsung Magician", Platform.DriveMakerFor("Samsung SSD 990 PRO 2TB").App, "drives: Samsung -> Magician");
+        Eq("Crucial Storage Executive", Platform.DriveMakerFor("CT1000P3PSSD8").App, "drives: Crucial part number -> Storage Executive");
+        Eq("WD Dashboard / SanDisk Dashboard", Platform.DriveMakerFor("WDC WDS100T3X0C-00SJG0").App, "drives: WD -> Dashboard");
+        Eq("Corsair SSD Toolbox", Platform.DriveMakerFor("Corsair MP600 PRO").App, "drives: Corsair -> SSD Toolbox");
+        True(Platform.DriveMakerFor("Generic NVMe Disk") == null, "drives: unknown maker -> no guess");
         Eq("Unknown system (ACPI) device", Inventory.HardwareDescription("ACPI\\MSFT0101", ""), "hardware description: unknown ACPI");
         Device pdev = Dev("x", "HDAUDIO\\FUNC_01&VEN_10DE&DEV_009A&SUBSYS_12345678&REV_1001");
         NvidiaDriver nv = new NvidiaDriver(); nv.Available = true; nv.Version = "999.99";

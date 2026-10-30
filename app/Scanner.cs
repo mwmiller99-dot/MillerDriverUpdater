@@ -171,6 +171,8 @@ namespace Mdu
                         r.Gpus = Inventory.Gpus();
                         r.Peripherals = Inventory.Peripherals(r.Inventory);
                         r.IntelDevices = Inventory.IntelDevices(r.Inventory);
+                        r.Board = Platform.GetBoard();
+                        r.Drives = Platform.Drives();
                         return 0;
                     });
                     Gpu nvGpu = r.Gpus.Find(g => g.Vendor == "NVIDIA");
@@ -205,6 +207,8 @@ namespace Mdu
                         List<string> ids = new List<string>();
                         foreach (Gpu g in r.Gpus) if (!string.IsNullOrEmpty(g.WingetId) && !g.AppInstalled && !ids.Contains(g.WingetId)) ids.Add(g.WingetId);
                         foreach (Peripheral p in r.IntelDevices) if (!p.AppInstalled && !ids.Contains(p.WingetId)) ids.Add(p.WingetId);
+                        if (r.Board != null && !string.IsNullOrEmpty(r.Board.WingetId) && !r.Board.AppInstalled && !ids.Contains(r.Board.WingetId)) ids.Add(r.Board.WingetId);
+                        foreach (DiskInfo d in r.Drives) if (!string.IsNullOrEmpty(d.WingetId) && !d.ToolInstalled && !ids.Contains(d.WingetId)) ids.Add(d.WingetId);
                         foreach (Peripheral p in r.Peripherals) if (p.Present && !string.IsNullOrEmpty(p.WingetId) && !p.AppInstalled && !ids.Contains(p.WingetId)) ids.Add(p.WingetId);
                         foreach (string id in ids) r.WingetHints[id] = Winget.IdExists(id);
                         return 0;

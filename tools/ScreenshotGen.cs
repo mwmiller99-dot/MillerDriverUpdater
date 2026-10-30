@@ -68,6 +68,14 @@ static class ScreenshotGen
         m.Name = "Logitech G502 X"; m.Vendor = "Logitech"; m.FirmwareRev = "0102"; m.VendorApp = "Logitech G HUB";
         m.AppMatch = "G HUB"; m.AppInstalled = true; m.Known = true; m.Present = true;
         r.Peripherals.Add(m);
+        BoardInfo b = new BoardInfo();
+        b.Maker = "MSI"; b.Product = "MAG B650 TOMAHAWK WIFI"; b.BiosVersion = "7D75v1A2"; b.BiosDate = "March 2023"; b.BiosAgeMonths = 43;
+        b.CpuVendor = "AMD"; b.App = "MSI Center"; b.AppMatch = "MSI Center"; b.SupportUrl = "https://www.msi.com/support/download"; b.AppInstalled = true;
+        b.ChipsetInstalled = "7.06.02.123";
+        r.Board = b;
+        DiskInfo s = new DiskInfo();
+        s.Model = "Samsung SSD 990 PRO 2TB"; s.Firmware = "4B2QJXD7"; s.Tool = "Samsung Magician"; s.ToolMatch = "Samsung Magician"; s.ToolInstalled = true;
+        r.Drives.Add(s);
         return r;
     }
 
@@ -131,7 +139,7 @@ static class ScreenshotGen
         t.GetField("_scanning", Any).SetValue(mw, true);   // the window's own scan sees this and does not start
         ApplyTheme(mw, t, win, dark);
         win.WindowStartupLocation = WindowStartupLocation.Manual;
-        win.Left = -5000; win.Top = 0; win.Width = 980; win.Height = 900;
+        win.Left = -5000; win.Top = 0; win.Width = 980; win.Height = args.Length > 2 ? double.Parse(args[2]) : 900;   // taller: see more cards
         win.ShowInTaskbar = false;
         win.Loaded += (s, e) => win.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
         {
@@ -139,6 +147,7 @@ static class ScreenshotGen
             t.GetMethod("ShowScan", Any).Invoke(mw, new object[] { Sample() });
             ((Button)win.FindName("RescanButton")).Visibility = Visibility.Visible;
             ((TextBlock)win.FindName("Status")).Text = "Select what you want, then click Install. Drivers get a restore point first.";
+            if (args.Length > 3 && args[3] == "bottom") ((ScrollViewer)win.FindName("Scroller")).ScrollToEnd();   // the lower cards
             win.Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(() => { Save(win, path); win.Close(); }));
         }));
         return app.Run(win);

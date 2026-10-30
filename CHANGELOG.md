@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+- **Motherboard and drives** card, for any PC: the BIOS version and its age (flagged once it is two years old), with
+  the PC or motherboard maker's download page (ASUS, MSI, Gigabyte, ASRock, Dell, HP, Lenovo, Acer, Microsoft,
+  Razer, Framework, Samsung) and its own updater app; the chipset package (AMD Chipset Software from amd.com, or Intel's
+  assistant); and each SSD/HDD with its maker's firmware tool (Samsung Magician, WD/SanDisk Dashboard, Crucial
+  Storage Executive, Kingston SSD Manager, Corsair SSD Toolbox, SeaTools, SK hynix, Solidigm, ADATA, Sabrent, Micron,
+  Teamgroup). A home-built PC is recognised by its motherboard, a brand PC or laptop by its own model. Nothing on the
+  card installs anything; BIOS updates stay with the maker's own instructions.
+
 ## 2.4.1
 - **Intel network, Wi-Fi and Bluetooth chips** are listed under Graphics and peripherals with Intel Driver & Support
   Assistant (Open App, or Get App through winget). Windows Update often stops short of Intel's newest driver for a

@@ -699,6 +699,7 @@ namespace Mdu
             ShowDrivers(r, nv, nvAvail);
             ShowApps(r, appsNormal, appsUnknown, appsSelf);
             ShowVendorApps(r, nv, nvAvail);
+            ShowPlatform(r);
             ShowBackups(r.Backups);
             ShowHidden(r);
             ShowHistory(r.History);
@@ -1036,6 +1037,66 @@ namespace Mdu
             }
             if (count == 0) AddNote(card.Body, "No graphics adapter or known-vendor peripherals detected.");
             if (other > 0) AddNote(card.Body, other + " other USB/Bluetooth devices (hubs, radios, webcams) are listed in the report.");
+        }
+
+        // Motherboard and drives: BIOS age, the board/PC maker's updater, the chipset package, SSD firmware tools. All of
+        // these come only from their makers; the card says where and how old the current one is, and installs nothing.
+        void ShowPlatform(ScanResult r)
+        {
+            BoardInfo b = r.Board;
+            List<DiskInfo> known = r.Drives.FindAll(d => d.Tool != null);
+            int unknownDrives = r.Drives.Count - known.Count;
+            List<Func<bool, Row>> rows = new List<Func<bool, Row>>();
+            if (b != null && !string.IsNullOrEmpty(b.BiosVersion))
+            {
+                rows.Add(last =>
+                {
+                    string who = string.IsNullOrEmpty(b.Maker) ? "the PC or motherboard maker" : b.Maker;
+                    string sec = (string.IsNullOrEmpty(b.Product) ? "" : b.Maker + " " + b.Product + "  " + Util.Dot + "  ") +
+                                 (b.BiosDate != null ? "released " + b.BiosDate + "  " + Util.Dot + "  " : "") +
+                                 "BIOS updates come only from " + who + "; follow its instructions";
+                    string age = Platform.AgeText(b.BiosAgeMonths);
+                    Button page = null;
+                    if (b.SupportUrl != null)
+                    {
+                        string url = b.SupportUrl;
+                        page = NewButton("Open Page", (s, e) => { Open(url); _status.Text = "Opened " + who + "'s download page. Search it for " + (string.IsNullOrEmpty(b.Product) ? "your model" : b.Product) + "."; });
+                        page.Margin = new Thickness(14, 0, 0, 0);
+                    }
+                    Row row = NewRow("BIOS " + b.BiosVersion, sec, last: last);
+                    if (b.BiosAgeMonths >= 24) SetRowTag(row, age, "warn", page);
+                    else if (page != null) { Grid.SetColumn(page, 3); row.Grid.Children.Add(page); }
+                    return row;
+                });
+                if (!string.IsNullOrEmpty(b.App) && b.AppMatch != "^$")
+                    rows.Add(last => VendorRow(b.App, b.Maker + "  " + Util.Dot + "  the maker's own updates for this " + (b.Laptop ? "laptop" : "board") + " (audio, network, chipset, BIOS)",
+                                               b.AppMatch, b.AppInstalled, b.SupportUrl, b.WingetId, r, last));
+                if (b.CpuVendor == "AMD")
+                    rows.Add(last =>
+                    {
+                        string url = "https://www.amd.com/en/support/download/drivers.html";
+                        string sec = (b.ChipsetInstalled != null ? "AMD Chipset Software " + b.ChipsetInstalled + " installed" : "AMD Chipset Software is not installed") +
+                                     "  " + Util.Dot + "  AMD publishes it on amd.com; Windows Update carries only parts of it";
+                        return NewRow("AMD chipset driver", sec, buttonText: "Open Page", last: last,
+                                      onClick: (s, e) => { Open(url); _status.Text = "Opened AMD's driver page. Pick your chipset (for example B550 or X670) under Chipsets."; });
+                    });
+                else if (b.CpuVendor == "Intel")
+                {
+                    VendorInfo intel = Inventory.GpuMap["Intel"];
+                    bool has = InstalledApps.FindFirst(intel.AppMatch) != null;
+                    rows.Add(last => VendorRow("Intel chipset and Management Engine", "Intel  " + Util.Dot + "  " + intel.App, intel.AppMatch, has, intel.Url, intel.WingetId, r, last));
+                }
+            }
+            foreach (DiskInfo d in known)
+            {
+                DiskInfo drive = d;
+                rows.Add(last => VendorRow(drive.Model + (drive.Count > 1 ? " (" + drive.Count + " drives)" : ""), (string.IsNullOrEmpty(drive.Firmware) ? "" : "Firmware " + drive.Firmware + "  " + Util.Dot + "  ") + drive.Tool,
+                                           drive.ToolMatch, drive.ToolInstalled, drive.Url, drive.WingetId, r, last));
+            }
+            if (rows.Count == 0 && unknownDrives == 0) return;
+            Card card = NewCard("Motherboard and drives", "BIOS, chipset and SSD firmware come only from each maker's own page or app, never through Windows Update. Nothing here installs on its own.", rows.Count.ToString(), "muted");
+            for (int i = 0; i < rows.Count; i++) card.Body.Children.Add(rows[i](i == rows.Count - 1).Element);
+            if (unknownDrives > 0) AddNote(card.Body, unknownDrives + (unknownDrives == 1 ? " other drive" : " other drives") + ": firmware, if any, comes from the drive maker's website.");
         }
 
         Row VendorRow(string name, string sec, string appMatch, bool installed, string url, string wingetId, ScanResult r, bool last)

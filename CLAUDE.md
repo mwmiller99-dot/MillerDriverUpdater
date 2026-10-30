@@ -161,6 +161,14 @@ address, never a personal email; never commit reports, logs, screenshots or anyt
   ScrollBar are re-templated in MainWindow.xaml to follow the theme. Avoid scareware tells: no red counts for problems,
   no urgency words, no "click Yes" instructions, no "send it to whoever gave you the app".
 
+- **Coverage audit (2.4.1+, 2026-10-30)**: the owner asked why Intel's network driver was missed and what else was. The
+  vendor-app list had only covered GPUs and USB gear. Now also: Intel Net/Bluetooth chips -> Intel DSA
+  (`Inventory.IsIntelDriverDevice`), and `Platform.cs` ("Motherboard and drives" card): maker by Win32_ComputerSystem
+  (brand PC/laptop) or Win32_BaseBoard (home-built: placeholder system fields), BIOS age from Win32_BIOS (flag >= 24
+  months, never install a BIOS), AMD Chipset Software / Intel DSA by CPU vendor, Win32_DiskDrive models -> SSD makers'
+  tools. Maker/drive maps hold candidate winget ids, verified by the hints phase like the vendor apps. When adding
+  hardware coverage, audit the whole device tree on a real PC, not just one category.
+
 ## Ideas not built (in priority order)
 1. Code signing: SignPath Foundation signs open-source projects free from a GitHub Actions build (TinyNvidiaUpdateChecker
    and DriverStoreExplorer use it); needs an OSI license and a CI build first. Then set `Updater.ExpectedSigner`.

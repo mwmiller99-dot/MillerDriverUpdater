@@ -129,6 +129,8 @@ namespace Mdu
         public List<Gpu> Gpus = new List<Gpu>();
         public List<Peripheral> Peripherals = new List<Peripheral>();
         public List<Peripheral> IntelDevices = new List<Peripheral>();   // Intel network/Wi-Fi/Bluetooth -> Intel's updater
+        public BoardInfo Board;                                          // PC/motherboard maker, BIOS age, chipset
+        public List<DiskInfo> Drives = new List<DiskInfo>();           // SSDs/HDDs and their makers' firmware tools
         public List<WuDriver> Drivers = new List<WuDriver>();
         public List<string> DeferredGpu = new List<string>();
         public List<WingetUpgrade> Apps = new List<WingetUpgrade>();

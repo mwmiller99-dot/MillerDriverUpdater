@@ -84,6 +84,10 @@ slow one). The headline shows the percentage, paced by how long each step took o
 - **Graphics and peripherals** names each device by the product name it reports ("Logitech G502 X", not "USB
   Composite Device") with an **Open App** button for its vendor app, or **Get App** (installs it through winget, or
   opens the vendor's page) when the app is missing.
+- **Motherboard and drives** shows the BIOS version and how old it is (flagged from two years), with the PC or
+  motherboard maker's download page and updater app; the chipset package (AMD's from amd.com, or Intel's assistant);
+  and each drive with its maker's firmware tool (Samsung Magician, WD Dashboard, Crucial Storage Executive...). It
+  never installs a BIOS or firmware itself: those stay with the maker's own tool and instructions.
 - **Roll Back** appears on every driver this app replaced; earlier backups are listed in their own card.
 - **Hide** (a small link on each update) keeps an update away for good, where the source itself remembers it: a driver
   is hidden in Windows Update (so Windows will not install it on its own either - use it after a Roll Back), an app is
@@ -173,7 +177,8 @@ app/Program.cs          entry point: single instance, UAC relaunch, --check / --
 app/MainWindow.cs       the window (WPF, built in code) + MainWindow.xaml (chrome and styles, embedded resource)
 app/Scanner.cs          the parallel check and its honest percentage
 app/InstallJob.cs       restore point -> backups -> Windows Update -> NVIDIA -> winget, with per-row progress
-app/Inventory.cs        devices, problem devices, GPUs, peripherals (vendor maps live here)
+app/Inventory.cs        devices, problem devices, GPUs, peripherals, Intel chips (vendor maps live here)
+app/Platform.cs         PC/motherboard maker, BIOS age, chipset, drives and their makers' tools
 app/WindowsUpdate.cs    WUA search/download/install with live progress
 app/Winget.cs           winget table parser, upgrade with pseudo-console progress and watchdog
 app/Nvidia.cs           nvidia.com lookup, download, signature check, driver-only install
@@ -200,7 +205,8 @@ SECURITY.md, CHANGELOG.md, CONTRIBUTING.md, .github/ISSUE_TEMPLATE   security po
 - Peripheral firmware: the tool reads the version your mouse/keyboard/headset reports, but only the vendor's own app knows if a newer one exists. There is no public API for that, so the tool gets you to the app rather than guessing.
 - AMD and Intel GPUs: neither publishes a driver-lookup service like NVIDIA's, so those still go through the vendor app.
 - Bluetooth headphones/earbuds update through their phone app.
-- BIOS/UEFI updates come from your motherboard or PC vendor's tool.
+- BIOS/UEFI and SSD firmware: the app shows the version and age and opens the maker's page or tool, but whether a
+  newer one exists only the maker's site knows, and the update itself is done with the maker's tool.
 - Releases are not code-signed yet, so SmartScreen and some antivirus heuristics warn about them (see [Is it safe?](#is-it-safe)).
 
 ## License

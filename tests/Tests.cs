@@ -123,6 +123,13 @@ static class Tests
         Eq("NVIDIA High Definition Audio (the HDMI / DisplayPort audio on the graphics card)", Inventory.HardwareDescription("HDAUDIO\\FUNC_01&VEN_10DE&DEV_009A&SUBSYS_12345678&REV_1001", "MEDIA"), "hardware description: NVIDIA HD audio");
         Eq("Realtek High Definition Audio device", Inventory.HardwareDescription("HDAUDIO\\FUNC_01&VEN_10EC&DEV_0897", "MEDIA"), "hardware description: Realtek HD audio");
         Eq("Logitech USB device", Inventory.HardwareDescription("USB\\VID_046D&PID_C539", ""), "hardware description: USB vendor from the peripheral map");
+        True(Inventory.IsIntelDriverDevice("PCI\\VEN_8086&DEV_15F3&SUBSYS_12345678&REV_03", "Net"), "intel: Ethernet chip -> Intel's app");
+        True(Inventory.IsIntelDriverDevice("PCI\\VEN_8086&DEV_2725&SUBSYS_00248086", "Net"), "intel: Wi-Fi chip -> Intel's app");
+        True(Inventory.IsIntelDriverDevice("USB\\VID_8087&PID_0032&REV_0000", "Bluetooth"), "intel: Bluetooth radio -> Intel's app");
+        True(!Inventory.IsIntelDriverDevice("USB\\VID_8087&PID_0032&MI_00", "Bluetooth"), "intel: Bluetooth sub-interface is not listed twice");
+        True(!Inventory.IsIntelDriverDevice("PCI\\VEN_10EC&DEV_8125", "Net"), "intel: Realtek Ethernet is not Intel");
+        True(!Inventory.IsIntelDriverDevice("PCI\\VEN_8086&DEV_7A60", "System"), "intel: chipset parts stay with Windows Update");
+        True(!Inventory.IsIntelDriverDevice("SWD\\MSRRAS\\MS_NDISWANIP", "Net"), "intel: virtual adapters are skipped");
         Eq("Unknown system (ACPI) device", Inventory.HardwareDescription("ACPI\\MSFT0101", ""), "hardware description: unknown ACPI");
         Device pdev = Dev("x", "HDAUDIO\\FUNC_01&VEN_10DE&DEV_009A&SUBSYS_12345678&REV_1001");
         NvidiaDriver nv = new NvidiaDriver(); nv.Available = true; nv.Version = "999.99";

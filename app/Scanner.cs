@@ -170,6 +170,7 @@ namespace Mdu
                     {
                         r.Gpus = Inventory.Gpus();
                         r.Peripherals = Inventory.Peripherals(r.Inventory);
+                        r.IntelDevices = Inventory.IntelDevices(r.Inventory);
                         return 0;
                     });
                     Gpu nvGpu = r.Gpus.Find(g => g.Vendor == "NVIDIA");
@@ -203,6 +204,7 @@ namespace Mdu
                         if (r.WingetError != null) return 0;
                         List<string> ids = new List<string>();
                         foreach (Gpu g in r.Gpus) if (!string.IsNullOrEmpty(g.WingetId) && !g.AppInstalled && !ids.Contains(g.WingetId)) ids.Add(g.WingetId);
+                        foreach (Peripheral p in r.IntelDevices) if (!p.AppInstalled && !ids.Contains(p.WingetId)) ids.Add(p.WingetId);
                         foreach (Peripheral p in r.Peripherals) if (p.Present && !string.IsNullOrEmpty(p.WingetId) && !p.AppInstalled && !ids.Contains(p.WingetId)) ids.Add(p.WingetId);
                         foreach (string id in ids) r.WingetHints[id] = Winget.IdExists(id);
                         return 0;

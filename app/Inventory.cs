@@ -272,6 +272,39 @@ namespace Mdu
             return result;
         }
 
+        // Pure: an Intel network, Wi-Fi or Bluetooth chip whose newer drivers Intel ships through its Driver & Support
+        // Assistant (Windows Update often stops at an older one, or never offers Intel's newest for a given chip).
+        // Only the physical device: PCI\VEN_8086 (Ethernet, Wi-Fi) or the top USB\VID_8087 node (Bluetooth).
+        public static bool IsIntelDriverDevice(string hardwareId, string cls)
+        {
+            if (!Rx.IsMatch(cls ?? "", "^(Net|Bluetooth)$")) return false;
+            if (Rx.IsMatch(hardwareId, @"^PCI\\VEN_8086&")) return true;
+            return Rx.IsMatch(hardwareId, @"^USB\\VID_8087&") && !Rx.IsMatch(hardwareId, "&MI_");
+        }
+
+        // Intel network / Wi-Fi / Bluetooth devices, each pointing at Intel's own updater (GpuMap["Intel"]).
+        public static List<Peripheral> IntelDevices(List<Device> inventory)
+        {
+            List<Peripheral> list = new List<Peripheral>();
+            VendorInfo info = GpuMap["Intel"];
+            InstalledApp app = null;
+            bool looked = false;
+            HashSet<string> names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (Device d in inventory)
+            {
+                if (!d.Present || !IsIntelDriverDevice(d.HardwareId, d.Class) || !names.Add(d.Name ?? "")) continue;
+                if (!looked) { app = InstalledApps.FindFirst(info.AppMatch); looked = true; }
+                Peripheral p = new Peripheral();
+                p.Name = d.Name; p.Vendor = "Intel"; p.DriverVersion = d.DriverVersion; p.DriverDate = d.DriverDate; p.Bus = d.Bus;
+                p.Present = true; p.Known = true;
+                p.VendorApp = info.App; p.AppMatch = info.AppMatch; p.WingetId = info.WingetId; p.Url = info.Url;
+                p.AppInstalled = app != null;
+                p.AppVersion = app != null ? app.Version : null;
+                list.Add(p);
+            }
+            return list;
+        }
+
         static bool IsGenericName(string name)
         {
             return string.IsNullOrWhiteSpace(name) || Rx.IsMatch(name.Trim(),

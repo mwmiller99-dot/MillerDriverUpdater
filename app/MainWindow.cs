@@ -1000,8 +1000,9 @@ namespace Mdu
             List<Peripheral> known = r.Peripherals.FindAll(p => p.Known && p.Present);
             known.Sort((a, b) => { int c = string.Compare(a.Vendor, b.Vendor, StringComparison.OrdinalIgnoreCase); return c != 0 ? c : string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase); });
             int other = r.Peripherals.FindAll(p => !p.Known && p.Present).Count;
-            Card card = NewCard("Graphics and peripherals", "Firmware for these comes from each maker's own app. Open it from here to check.", (r.Gpus.Count + known.Count).ToString(), "muted");
-            int count = r.Gpus.Count + known.Count, i = 0;
+            List<Peripheral> intel = r.IntelDevices;
+            Card card = NewCard("Graphics and peripherals", "Newer drivers and firmware for these come from each maker's own app. Open it from here to check.", (r.Gpus.Count + intel.Count + known.Count).ToString(), "muted");
+            int count = r.Gpus.Count + intel.Count + known.Count, i = 0;
             foreach (Gpu g in r.Gpus)
             {
                 bool last = ++i == count;
@@ -1014,6 +1015,16 @@ namespace Mdu
                                  tag: nvAvail ? "Update " + nv.Version + " above" : "Up to date", tagKind: "ok", last: last);
                 else row = VendorRow(g.Name, sec, g.AppMatch, g.AppInstalled, g.Url, g.WingetId, r, last);
                 card.Body.Children.Add(row.Element);
+            }
+            // Intel network / Wi-Fi / Bluetooth: Windows Update often stops short of Intel's newest driver for the chip;
+            // Intel's own assistant knows which one Intel recommends for it.
+            foreach (Peripheral p in intel)
+            {
+                bool last = ++i == count;
+                string sec = "Intel " + Util.Dot + " driver " + p.DriverVersion;
+                if (!string.IsNullOrEmpty(p.DriverDate)) sec += " " + Util.Dot + " " + p.DriverDate;
+                sec += " " + Util.Dot + " " + p.VendorApp;
+                card.Body.Children.Add(VendorRow(p.Name, sec, p.AppMatch, p.AppInstalled, p.Url, p.WingetId, r, last).Element);
             }
             foreach (Peripheral p in known)
             {

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+- **Intel network, Wi-Fi and Bluetooth chips** are listed under Graphics and peripherals with Intel Driver & Support
+  Assistant (Open App, or Get App through winget). Windows Update often stops short of Intel's newest driver for a
+  chip; Intel's assistant knows which one Intel recommends for it.
+
 ## 2.4.0
 - **New look.** A new icon (a chip with an up arrow) in the window, taskbar, installer and HTML report, drawn from one
   design by `tools\ArtGen.cs`. Checkboxes and the scrollbar now match the light/dark theme instead of the stock
